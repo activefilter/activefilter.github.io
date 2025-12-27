@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <meta name="author" content="JLTTCK Active Filter">
+    <meta name="description" content="Deuteranomaly screening test using animated mosaic patterns. Detect red-green color vision deficiency.">
+    <title>Active Filter Deuteranomaly Test</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👁️</text></svg>">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ============================================
+           CSS Variables & Reset
+           ============================================ */
+        :root {
+            --color-bg: #1a1a1a;
+            --color-bg-elevated: #252525;
+            --color-text: #ffffff;
+            --color-text-muted: #999999;
+            --color-primary: #4a90d9;
+            --color-primary-hover: #5fa0e9;
+            --color-success: #28a745;
+            --color-warning: #ffc107;
+            --color-danger: #dc3545;
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --transition: 0.2s ease;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            background-color: var(--color-bg) !important;
+            color: var(--color-text);
+            font-family: var(--font-family);
+            font-size: 16px;
+            line-height: 1.5;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ============================================
+           Layout
+           ============================================ */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            margin-bottom: 15px;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 600;
+            margin: 10px 0;
+            color: var(--color-text);
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--color-text-muted);
+            margin-bottom: 10px;
+        }
+
+        /* ============================================
+           Progress Display
+           ============================================ */
+        .progress-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: var(--color-bg-elevated);
+            border-radius: 8px;
+            min-width: 320px;
+        }
+
+        .progress-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .progress-label {
+            font-size: 12px;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .progress-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        /* ============================================
+           Instruction Text
+           ============================================ */
+        .instruction {
+            font-size: 18px;
+            margin: 10px 0 15px;
+            min-height: 27px;
+            color: var(--color-text);
+        }
+
+        /* ============================================
+           Canvas Container
+           ============================================ */
+        .canvas-container {
+            position: relative;
+            margin: 10px 0;
+        }
+
+        #mosaic-canvas {
+            display: block;
+            cursor: pointer;
+            touch-action: manipulation;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ============================================
+           Buttons
+           ============================================ */
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            font-family: var(--font-family);
+            font-size: 16px;
+            font-weight: 500;
+            padding: 12px 28px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all var(--transition);
+            min-width: 140px;
+            background-color: var(--color-bg-elevated);
+            color: var(--color-text);
+        }
+
+        .btn:hover:not(:disabled) {
+            background-color: #333333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--color-primary-hover);
+            border-color: var(--color-primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border-color: var(--color-text-muted);
+            color: var(--color-text);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            border-color: var(--color-text);
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* ============================================
+           Results Section
+           ============================================ */
+        .results-container {
+            margin-top: 25px;
+            padding: 25px;
+            background-color: var(--color-bg-elevated);
+            border-radius: 12px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .result-score {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--color-primary);
+        }
+
+        .result-severity {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .severity-normal {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: var(--color-success);
+        }
+
+        .severity-mild {
+            background-color: rgba(255, 193, 7, 0.2);
+            color: var(--color-warning);
+        }
+
+        .severity-moderate {
+            background-color: rgba(255, 152, 0, 0.2);
+            color: #ff9800;
+        }
+
+        .severity-severe {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: var(--color-danger);
+        }
+
+        .result-description {
+            font-size: 15px;
+            color: var(--color-text-muted);
+            line-height: 1.6;
+            text-align: left;
+        }
+
+        /* ============================================
+           Start Screen
+           ============================================ */
+        .start-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            max-width: 600px;
+        }
+
+        .start-screen .logo {
+            font-size: 64px;
+            margin-bottom: 25px;
+        }
+
+        .start-screen .description {
+            color: var(--color-text-muted);
+            margin-bottom: 30px;
+            line-height: 1.7;
+        }
+
+        .features {
+            list-style: none;
+            text-align: left;
+            margin: 25px 0;
+            padding: 0;
+        }
+
+        .features li {
+            padding: 10px 0;
+            color: var(--color-text-muted);
+            display: flex;
+            align-items: center;
+        }
+
+        .features li::before {
+            content: "✓";
+            color: var(--color-success);
+            font-weight: bold;
+            font-size: 20px;
+            margin-right: 12px;
+        }
+
+        /* ============================================
+           Hidden Utility
+           ============================================ */
+        .hidden {
+            display: none !important;
+        }
+
+        /* ============================================
+           Responsive Adjustments
+           ============================================ */
+        @media (max-width: 600px) {
+            .title {
+                font-size: 22px;
+            }
+
+            .instruction {
+                font-size: 16px;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 14px;
+                min-width: 120px;
+            }
+
+            .progress-bar {
+                min-width: auto;
+                width: 100%;
+            }
+
+            .results-container {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .button-group {
+                width: 100%;
+                max-width: 320px;
+            }
+
+            .btn {
+                flex: 1 1 45%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="title">Deuteranomaly Screening Test</h1>
+            <p class="subtitle">JLTTCK Active Filter Research Project</p>
+        </header>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="start-screen">
+            <div class="logo">👁️</div>
+            <p class="description">
+                This interactive test screens for deuteranomaly (reduced green sensitivity), 
+                the most common form of red-green color vision deficiency. You'll see a grid 
+                of animated color tiles - tap the group that looks different from the background.
+            </p>
+            <ul class="features">
+                <li>16 progressive difficulty levels</li>
+                <li>Targets deuteranomaly confusion axis</li>
+                <li>Takes about 2-3 minutes</li>
+                <li>Results stored locally only</li>
+            </ul>
+            <button id="btn-start" class="btn btn-primary" style="font-size: 18px; padding: 14px 40px;">
+                Start Test
+            </button>
+        </div>
+
+        <!-- Progress Bar -->
+        <div id="progress-bar" class="progress-bar hidden">
+            <div class="progress-item">
+                <span class="progress-label">Score</span>
+                <span class="progress-value" id="score-display">0 of 16</span>
+            </div>
+            <div class="progress-item">
+                <span class="progress-label">Level</span>
+                <span class="progress-value" id="level-display">1 of 16</span>
+            </div>
+        </div>
+
+        <!-- Instruction -->
+        <p class="instruction" id="instruction-text"></p>
+
+        <!-- Test Container -->
+        <div id="test-container" class="canvas-container hidden">
+            <canvas id="mosaic-canvas"></canvas>
+        </div>
+
+        <!-- Control Buttons -->
+        <div id="control-buttons" class="button-group hidden">
+            <button id="btn-cant-tell" class="btn btn-secondary">I Can't Tell</button>
+            <button id="btn-restart" class="btn">Restart</button>
+        </div>
+
+        <!-- Results -->
+        <div id="results-container" class="results-container hidden">
+            <div class="result-score" id="result-score"></div>
+            <div class="result-severity" id="result-severity"></div>
+            <p class="result-description" id="result-description"></p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/activefilter-mosaic.js"></script>
+    <script src="js/activefilter-controller.js"></script>
+    <script>
+        // Additional UI coordination
+        document.addEventListener('DOMContentLoaded', function() {
+            const startBtn = document.getElementById('btn-start');
+            const startScreen = document.getElementById('start-screen');
+            const testContainer = document.getElementById('test-container');
+            const controlButtons = document.getElementById('control-buttons');
+            const progressBar = document.getElementById('progress-bar');
+
+            // Start button handler
+            startBtn.addEventListener('click', function() {
+                startScreen.classList.add('hidden');
+                testContainer.classList.remove('hidden');
+                controlButtons.classList.remove('hidden');
+                progressBar.classList.remove('hidden');
+            });
+
+            // Restart handler - show test elements
+            document.getElementById('btn-restart').addEventListener('click', function() {
+                testContainer.classList.remove('hidden');
+                document.getElementById('results-container').classList.add('hidden');
+            });
+        });
+    </script>
+</body>
+</html>
