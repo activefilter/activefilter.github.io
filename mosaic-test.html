@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <meta name="author" content="ColorVision Pro">
-    <meta name="description" content="JLTTCK Active Filter mosaic color vision test for deuteranomaly. Detect red-green color blindness (deuteranomaly, protanomaly). Free online color blind test.">
-    <title>JLTTCK Active Filter - Deuteranomaly Test</title>
+    <meta name="author" content="JLTTCK Active Filter">
+    <meta name="description" content="JLTTCK Active Filter mosaic color vision test. Detect red-green color blindness (deuteranomaly, protanomaly). Free online color blind test.">
+    <title>JLTTCK Active Filter - Mosaic Test</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👁️</text></svg>">
     
@@ -397,106 +397,461 @@
                 transition: none;
             }
         }
+
+        /* Additional styles for the mosaic */
+        .bars {
+            display: block;
+            cursor: pointer;
+        }
+
+        .myButton {
+            box-shadow: inset 0px 39px 7px -24px #e67a73;
+            background-color: #d1190c;
+            border-radius: 6px;
+            border: 1px solid #ffffff;
+            display: inline-block;
+            cursor: pointer;
+            color: #ffffff !important;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            padding: 12px 30px;
+            text-decoration: none;
+            text-shadow: 1px 1px 0px #382524;
+            margin-top: 20px;
+        }
+
+        .myButton:hover {
+            background-color: #f03c05;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Header -->
         <header class="header">
-            <h1 class="title">JLTTCK ACTIVE FILTER</h1>
+            <h1 class="title">JLTTCK ACTIVE FILTER - MOSAIC TEST</h1>
         </header>
 
         <!-- Score Display -->
         <div class="scores">
             <div class="score-item">
                 <span class="score-label">Red-Green:</span>
-                <span class="score-value" id="score-red-green">0%</span>
+                <span class="score-value" id="p1">0%</span>
             </div>
             <div class="score-item">
                 <span class="score-label">Purple-Blue:</span>
-                <span class="score-value" id="score-purple-blue">0%</span>
+                <span class="score-value" id="p2">0%</span>
             </div>
             <div class="score-item">
                 <span class="score-label">Purple-Green:</span>
-                <span class="score-value" id="score-purple-green">0%</span>
+                <span class="score-value" id="p3">0%</span>
             </div>
         </div>
 
         <!-- Instruction -->
-        <p class="instruction" id="instruction-text">Click on the small squares in the mosaic!</p>
+        <p class="instruction" id="komment">Click on the small squares in the mosaic!</p>
 
-        <!-- Test Container -->
-        <div id="test-container" class="canvas-container hidden">
-            <canvas id="mosaic-canvas"></canvas>
-        </div>
-
-        <!-- Start Screen -->
-        <div id="start-screen" class="start-screen">
-            <div class="logo">👁️</div>
-            <p class="description">
-                This test screens for red-green color vision deficiency (deuteranomaly and protanomaly).
-                You'll see a grid of colored squares - click on the group that looks different.
-            </p>
-            <ul class="features">
-                <li>3 test categories (Red-Green, Purple-Blue, Purple-Green)</li>
-                <li>20 progressive difficulty levels each</li>
-                <li>Takes about 2-5 minutes</li>
-                <li>No data sent to servers - runs entirely in your browser</li>
-            </ul>
-            <button id="btn-start" class="btn btn-primary" style="font-size: 18px; padding: 15px 40px;">
-                Start Test
-            </button>
+        <!-- Canvas -->
+        <div class="canvas-container">
+            <canvas class="bars"></canvas>
         </div>
 
         <!-- Control Buttons -->
-        <div id="control-buttons" class="button-group hidden">
-            <button id="btn-dont-see" class="btn">I Don't See</button>
-            <button id="btn-restart" class="btn">Restart</button>
-            <button id="btn-exit" class="btn btn-danger">Exit</button>
+        <div class="button-group">
+            <button class="btn" onclick="IdontSee();">I Don't See</button>
+            <button class="btn" onclick="restartTest();">Restart</button>
+            <button class="btn btn-danger" onclick="location.href='index.html';">Exit</button>
         </div>
 
-        <!-- Diagnosis -->
-        <div id="diagnosis-container" class="diagnosis hidden">
-            <p id="diagnosis-severity" class="diagnosis-severity"></p>
-            <p id="diagnosis-type" class="diagnosis-type"></p>
-            <div id="diagnosis-description" class="diagnosis-description"></div>
-        </div>
-
-        <!-- Results Container (Export) -->
-        <div id="results-container" class="export-section hidden">
-            <p class="export-title">Export your results</p>
-            <div class="export-buttons">
-                <button id="btn-export-json" class="btn">Export JSON</button>
-                <button id="btn-export-csv" class="btn">Export CSV</button>
-            </div>
-        </div>
+        <!-- Diagnosis (populated dynamically) -->
+        <div id="komment2" style="margin-top: 20px;"></div>
     </div>
 
-    <!-- Scripts -->
-    <script src="js/active-filter-mosaic.js"></script>
-    <script src="js/active-filter-controller.js"></script>
     <script>
-        // Additional initialization and UI coordination
-        document.addEventListener('DOMContentLoaded', function() {
-            const startBtn = document.getElementById('btn-start');
-            const startScreen = document.getElementById('start-screen');
-            const testContainer = document.getElementById('test-container');
-            const controlButtons = document.getElementById('control-buttons');
+        // ============================================
+        // JLTTCK Active Filter - Mosaic Test
+        // Based on proven colorlitelens.com implementation
+        // ============================================
 
-            // Start button handler
-            startBtn.addEventListener('click', function() {
-                startScreen.classList.add('hidden');
-                testContainer.classList.remove('hidden');
-                controlButtons.classList.remove('hidden');
-            });
+        // Global Variables
+        var fwp = [];           // Particle array
+        var seged = [];         // Debug array
+        var tesztkocka = [];    // Target position per level
+        var hatterszin = [];    // Background color
+        var szin = [];          // Current color palette
 
-            // Handle restart to show canvas
-            document.getElementById('btn-restart').addEventListener('click', function() {
-                testContainer.classList.remove('hidden');
-                document.getElementById('diagnosis-container').classList.add('hidden');
-                document.getElementById('results-container').classList.add('hidden');
-            });
-        });
+        // Gray calibration
+        var szinszurke = [0, 0, 60];
+
+        // Red-Green palette (20 levels) - [h, s, l] triplets
+        var szinr = [
+            0, 100, 28,   6, 98, 28,   11, 95, 28,  15, 93, 28,  19, 90, 27,
+            27, 87, 26,   34, 84, 25,  40, 82, 26,  46, 80, 26,  59, 79, 26,
+            72, 77, 25,   72, 76, 24,  72, 75, 22,  78, 76, 23,  83, 76, 23,
+            89, 76, 23,   95, 76, 22,  99, 77, 21,  103, 77, 19, 106, 78, 20
+        ];
+
+        // Purple-Blue palette (20 levels)
+        var szinp = [
+            240, 100, 29, 243, 100, 29, 246, 100, 28, 249, 100, 27, 252, 100, 26,
+            255, 100, 26, 258, 100, 25, 261, 100, 25, 264, 100, 24, 267, 100, 24,
+            270, 100, 23, 273, 100, 22, 276, 100, 21, 279, 100, 21, 282, 100, 20,
+            285, 100, 20, 288, 100, 19, 291, 100, 18, 294, 100, 17, 297, 100, 17
+        ];
+
+        // Purple-Green palette (20 levels)
+        var szind = [
+            173, 37, 25,  176, 29, 27, 178, 23, 28, 183, 16, 29, 191, 10, 31,
+            213, 7, 32,   260, 5, 32,  295, 8, 32,  311, 13, 33, 320, 18, 33,
+            324, 22, 34,  324, 25, 34, 324, 28, 35, 327, 35, 35, 327, 42, 36,
+            327, 45, 36,  327, 48, 36, 327, 50, 36, 325, 62, 35, 324, 74, 35
+        ];
+
+        // Test state
+        var k = 0;
+        var fut = 0;                // Animation running flag
+        var hibazottmar = 0;        // Has missed once
+        var szint = 0;              // Current level (0-19)
+        var kovteszt = -1;          // Current category (-1=calibration, 0=R-G, 1=P-B, 2=P-G)
+        var eredmeny = [0, 0, 0];   // Results percentages
+        var kockaszelesseg = 30;    // Tile size
+        var mousePos = { x: 0, y: 0 };
+        var szovegId;
+
+        // Messages
+        var szoveg = [
+            "Click on the small square!",
+            "Try again!",
+            "Moving to next test..."
+        ];
+
+        // Canvas Setup
+        var canvasBars = document.querySelector(".bars");
+        var ctxBars = canvasBars.getContext("2d");
+
+        // Responsive sizing
+        if (window.innerWidth < 760) {
+            kockaszelesseg = 16;
+            canvasBars.width = 320;
+            canvasBars.height = 330;
+        } else {
+            kockaszelesseg = 30;
+            canvasBars.width = 600;
+            canvasBars.height = 600;
+        }
+
+        ctxBars.strokeStyle = ctxBars.fillStyle = 'hsl(80,70%,50%)';
+        canvasBars.addEventListener('mousedown', getMousePos);
+        canvasBars.addEventListener('touchstart', getTouchPos, { passive: false });
+
+        // Particle Class
+        function Particle(x, y, id, h, s, l, freq) {
+            var self = this;
+            this.id = id;
+            this.x = x;
+            this.y = y;
+            this.h = h;
+            this.s = s;
+            this.l = l;
+            this.freq = freq;
+            this.sinVal = Math.random() * 10;
+
+            this.ujszin = function() {
+                self.sinVal = self.sinVal + self.freq;
+                self.l = self.l + Math.sin(self.sinVal * 3.14 / 2);
+            };
+        }
+
+        // I Don't See Button Handler
+        function IdontSee() {
+            if (eredmeny[0] > 80) {
+                Vege();
+            } else {
+                kovteszt++;
+                Maincontroller();
+            }
+        }
+
+        // Restart Test
+        function restartTest() {
+            kovteszt = 0;
+            document.getElementById('p1').innerHTML = '0%';
+            document.getElementById('p2').innerHTML = '0%';
+            document.getElementById('p3').innerHTML = '0%';
+            eredmeny = [0, 0, 0];
+            Maincontroller();
+        }
+
+        // Main Controller
+        function Maincontroller() {
+            szint = 0;
+            fut = 1;
+            hibazottmar = 0;
+            document.getElementById("komment").innerHTML = szoveg[0];
+
+            if (kovteszt > 2) {
+                Vege();
+                return;
+            }
+
+            if (kovteszt == -1) {
+                // Calibration (gray)
+                szin = szinszurke;
+                Init([0, 0, 20]);
+                szovegId = "p1";
+                tesztkockapoz();
+                veletlen(szin[3 * szint], szin[3 * szint + 1], szin[3 * szint + 2]);
+                startRender();
+            } else if (kovteszt == 0) {
+                // Red-Green test
+                szint = 0;
+                hatterszin = [111, 78, 20];
+                szin = szinr;
+                szovegId = "p1";
+                Init(hatterszin);
+                tesztkockapoz();
+                veletlen(szin[3 * szint], szin[3 * szint + 1], szin[3 * szint + 2]);
+                for (var j = 0; j < 6; j++) {
+                    for (var i = 0; i < 324; i++) {
+                        fwp[i].ujszin();
+                    }
+                }
+            } else if (kovteszt == 1) {
+                // Purple-Blue test
+                szovegId = "p2";
+                hatterszin = [300, 100, 16];
+                szin = szinp;
+                Init(hatterszin);
+                tesztkockapoz();
+                veletlen(szin[3 * szint], szin[3 * szint + 1], szin[3 * szint + 2]);
+                for (var j = 0; j < 6; j++) {
+                    for (var i = 0; i < 324; i++) {
+                        fwp[i].ujszin();
+                    }
+                }
+            } else if (kovteszt == 2) {
+                // Purple-Green test
+                szovegId = "p3";
+                hatterszin = [323, 87, 34];
+                szin = szind;
+                Init(hatterszin);
+                tesztkockapoz();
+                veletlen(szin[3 * szint], szin[3 * szint + 1], szin[3 * szint + 2]);
+                for (var j = 0; j < 6; j++) {
+                    for (var i = 0; i < 324; i++) {
+                        fwp[i].ujszin();
+                    }
+                }
+            }
+        }
+
+        // Animation Loop
+        function startRender() {
+            var i = 0;
+            var szimszam = 10, idokoz = 50;
+
+            for (i = 1; i < szimszam; i++) {
+                setTimeout(render, idokoz * i);
+            }
+
+            if (fut) {
+                setTimeout(startRender, 510);
+            }
+        }
+
+        // Initialize Grid
+        function Init(hsz) {
+            var i = 0;
+            var j = 0, x = 0, y = 0;
+            var oszlopok = 18;
+            var sorok = 18;
+            var totalWidth = oszlopok * kockaszelesseg;
+            var totalHeight = sorok * kockaszelesseg;
+            var offsetX = (canvasBars.width - totalWidth) / 2;
+            var offsetY = (canvasBars.height - totalHeight) / 2;
+
+            for (i = 0; i < oszlopok * sorok; i++) {
+                y = Math.floor(i / oszlopok);
+                x = i % oszlopok;
+                var h = hsz[0];
+                var s = hsz[1];
+                var l = hsz[2];
+                var f = 0.1 + Math.random() / 10;
+                fwp[i] = new Particle(x * kockaszelesseg + offsetX, y * kockaszelesseg + offsetY, i, h, s, l, f);
+            }
+        }
+
+        // Generate Target Positions
+        function tesztkockapoz() {
+            for (var i = 0; i < szin.length / 3; i++) {
+                tesztkocka[i] = Math.floor(Math.random() * 16 + 1) * 18 + Math.floor(Math.random() * 16 + 1);
+            }
+        }
+
+        // Set Target Color
+        function veletlen(h, s, l) {
+            var id;
+            for (var i = -19; i < 18; i += 18) {
+                for (var j = 0; j < 3; j += 1) {
+                    id = tesztkocka[szint] + i + j;
+                    if (id >= 0 && id < fwp.length) {
+                        fwp[id].h = h;
+                        fwp[id].s = s;
+                        fwp[id].l = l;
+                    }
+                }
+            }
+        }
+
+        // Handle Mouse Click
+        function getMousePos(event) {
+            var rect = canvasBars.getBoundingClientRect();
+            var kiskocka = fwp[tesztkocka[szint]];
+
+            mousePos = {
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top
+            };
+
+            handleClick(mousePos.x, mousePos.y, kiskocka);
+        }
+
+        // Handle Touch
+        function getTouchPos(event) {
+            event.preventDefault();
+            var rect = canvasBars.getBoundingClientRect();
+            var touch = event.touches[0];
+            var kiskocka = fwp[tesztkocka[szint]];
+
+            mousePos = {
+                x: touch.clientX - rect.left,
+                y: touch.clientY - rect.top
+            };
+
+            handleClick(mousePos.x, mousePos.y, kiskocka);
+        }
+
+        // Common Click Handler
+        function handleClick(mx, my, kiskocka) {
+            if (szint < tesztkocka.length && kiskocka) {
+                var balfelso = { x: kiskocka.x - kockaszelesseg, y: kiskocka.y - kockaszelesseg };
+                var jobbalso = { x: kiskocka.x + kockaszelesseg * 2, y: kiskocka.y + kockaszelesseg * 2 };
+
+                if (balfelso.x < mx && balfelso.y < my && mx < jobbalso.x && my < jobbalso.y) {
+                    // Correct click
+                    szint += 1;
+                    hibazottmar = 0;
+                    document.getElementById("komment").innerHTML = szoveg[0];
+                    document.getElementById(szovegId).innerHTML = parseInt(100 * (szint / 20)) + "%";
+                    eredmeny[Math.max(0, kovteszt)] = parseInt(100 * (szint / 20));
+
+                    if (szint < tesztkocka.length) {
+                        Init(hatterszin);
+                        veletlen(szin[3 * szint], szin[3 * szint + 1], szin[3 * szint + 2]);
+                    } else if (kovteszt >= 2) {
+                        Vege();
+                    } else if (eredmeny[0] == 100) {
+                        Vege();
+                    } else {
+                        kovteszt++;
+                        Maincontroller();
+                    }
+                } else if (hibazottmar) {
+                    // Second miss - move to next category
+                    document.getElementById("komment").innerHTML = szoveg[2];
+                    kovteszt++;
+                    if (kovteszt > 2 || eredmeny[0] > 80) {
+                        Vege();
+                    } else {
+                        Maincontroller();
+                    }
+                } else {
+                    // First miss
+                    hibazottmar = 1;
+                    document.getElementById("komment").innerHTML = szoveg[1];
+                }
+            } else {
+                fut = 0;
+            }
+        }
+
+        // Generate Diagnosis
+        function Diagnozis() {
+            var diag = "";
+            var sulyossag = "";
+
+            if ((eredmeny[0] > 80) || ((eredmeny[0] == 80) && (eredmeny[1] > 75) && (eredmeny[2] > 80))) {
+                diag = "NORMAL RESULT";
+            } else if (eredmeny[2] < eredmeny[1]) {
+                diag = "DEUTAN TYPE OF COLOR VISION DEFICIENCY";
+            } else {
+                diag = "PROTAN TYPE OF COLOR VISION DEFICIENCY";
+            }
+
+            if ((eredmeny[0] < 25) && ((eredmeny[1] < 40) || (eredmeny[2] < 40))) {
+                sulyossag = "SEVERE ";
+            }
+            if ((eredmeny[0] > 25) && (eredmeny[0] < 60)) {
+                sulyossag = "MODERATE ";
+            }
+            if ((eredmeny[0] > 60) && (eredmeny[0] < 80)) {
+                sulyossag = "MILD ";
+            }
+
+            diag = "<b>" + sulyossag + diag + "</b><br><br>" +
+                   "To learn more about color vision: " +
+                   "<a class='myButton' href='index.html'>BACK TO HOME</a>";
+
+            document.getElementById("komment").innerHTML = "Diagnosis: " + diag;
+        }
+
+        // End Test
+        function Vege() {
+            var i;
+            // "END" pattern positions
+            var vegeid = [
+                128, 129, 130, 132, 136, 138, 139, 140,
+                146, 150, 151, 154, 156, 159,
+                164, 165, 168, 170, 172, 174, 177,
+                182, 186, 189, 190, 192, 195,
+                200, 201, 202, 204, 208, 210, 211, 212
+            ];
+
+            fut = 0;  // Stop animation
+            Diagnozis();
+            
+            // Use current or default background
+            var bgColor = hatterszin.length ? hatterszin : [0, 0, 20];
+            Init(bgColor);
+
+            for (i = 0; i < vegeid.length; i++) {
+                if (vegeid[i] < fwp.length) {
+                    fwp[vegeid[i]].h = 60;
+                    fwp[vegeid[i]].s = 99;
+                    fwp[vegeid[i]].l = 95;
+                }
+            }
+
+            render();
+        }
+
+        // Render Frame
+        function render() {
+            ctxBars.clearRect(0, 0, canvasBars.width, canvasBars.height);
+            k = k + 1;
+
+            for (var i = 0; i < 324; i++) {
+                if (fwp[i]) {
+                    fwp[i].ujszin();
+                    ctxBars.strokeStyle = ctxBars.fillStyle =
+                        'hsl(' + fwp[i].h + "," + fwp[i].s + "%" + "," + fwp[i].l + "%" + ')';
+                    ctxBars.fillRect(fwp[i].x, fwp[i].y, kockaszelesseg - 3, kockaszelesseg - 3);
+                }
+            }
+        }
+
+        // Start Test on Load
+        Maincontroller();
     </script>
 </body>
 </html>
