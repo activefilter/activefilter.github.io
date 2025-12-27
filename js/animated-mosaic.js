@@ -216,12 +216,20 @@ const AnimatedMosaic = {
         this.ctx = canvasElement.getContext('2d');
         
         // Check for reduced motion preference
-        this.config.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        
-        // Listen for reduced motion changes
-        window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => {
+        const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+        this.config.reducedMotion = motionQuery.matches;
+
+        // Listen for reduced motion changes (cross-browser safe)
+        const handleMotionChange = (e) => {
             this.config.reducedMotion = e.matches;
-        });
+        };
+
+        if (typeof motionQuery.addEventListener === 'function') {
+            motionQuery.addEventListener('change', handleMotionChange);
+        } else if (typeof motionQuery.addListener === 'function') {
+            // Safari <14 fallback
+            motionQuery.addListener(handleMotionChange);
+        }
         
         return this;
     },
