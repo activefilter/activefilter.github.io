@@ -512,7 +512,7 @@
         var fut = 0;                // Animation running flag
         var hibazottmar = 0;        // Has missed once
         var szint = 0;              // Current level (0-19)
-        var kovteszt = -1;          // Current category (-1=calibration, 0=R-G, 1=P-B, 2=P-G)
+        var kovteszt = 0;           // Current category (0=R-G, 1=P-B, 2=P-G) - No calibration
         var eredmeny = [0, 0, 0];   // Results percentages
         var kockaszelesseg = 30;    // Tile size
         var mousePos = { x: 0, y: 0 };
@@ -527,9 +527,9 @@
 
         // Canvas Setup
         var canvasBars = document.querySelector(".bars");
-        var ctxBars = canvasBars.getContext("2d");
+        var ctxBars = null;
 
-        // Responsive sizing
+        // Responsive sizing - set dimensions BEFORE getting context for Safari compatibility
         if (window.innerWidth < 760) {
             kockaszelesseg = 16;
             canvasBars.width = 320;
@@ -538,6 +538,12 @@
             kockaszelesseg = 30;
             canvasBars.width = 600;
             canvasBars.height = 600;
+        }
+
+        // Get 2D context after setting dimensions (Safari/iOS fix)
+        ctxBars = canvasBars.getContext("2d", { willReadFrequently: false });
+        if (!ctxBars) {
+            console.error("Failed to get canvas 2D context");
         }
 
         ctxBars.strokeStyle = ctxBars.fillStyle = 'hsl(80,70%,50%)';
@@ -594,15 +600,7 @@
                 return;
             }
 
-            if (kovteszt == -1) {
-                // Calibration (gray)
-                szin = szinszurke;
-                Init([0, 0, 20]);
-                szovegId = "p1";
-                tesztkockapoz();
-                veletlen(szin[3 * szint], szin[3 * szint + 1], szin[3 * szint + 2]);
-                startRender();
-            } else if (kovteszt == 0) {
+            if (kovteszt == 0) {
                 // Red-Green test
                 szint = 0;
                 hatterszin = [111, 78, 20];
@@ -643,6 +641,9 @@
                     }
                 }
             }
+            
+            // Start animation loop for all tests
+            startRender();
         }
 
         // Animation Loop
@@ -837,14 +838,18 @@
 
         // Render Frame
         function render() {
+            if (!ctxBars) return; // Safety check for context
+            
             ctxBars.clearRect(0, 0, canvasBars.width, canvasBars.height);
             k = k + 1;
 
             for (var i = 0; i < 324; i++) {
                 if (fwp[i]) {
                     fwp[i].ujszin();
-                    ctxBars.strokeStyle = ctxBars.fillStyle =
-                        'hsl(' + fwp[i].h + "," + fwp[i].s + "%" + "," + fwp[i].l + "%" + ')';
+                    var hue = Math.round(fwp[i].h);
+                    var sat = Math.round(fwp[i].s);
+                    var light = Math.round(fwp[i].l);
+                    ctxBars.fillStyle = 'hsl(' + hue + ', ' + sat + '%, ' + light + '%)';
                     ctxBars.fillRect(fwp[i].x, fwp[i].y, kockaszelesseg - 3, kockaszelesseg - 3);
                 }
             }
