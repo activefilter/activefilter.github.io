@@ -74,6 +74,15 @@ const AdaptiveCameraFilter = {
             redGain: 1.35,
             greenGain: 0.78,
             blueGain: 1.02
+        },
+        inconclusive: {
+            hueShift: 15,
+            redGreenEnhance: 0.20,
+            saturationBoost: 12,
+            contrastBoost: 6,
+            redGain: 1.15,
+            greenGain: 0.92,
+            blueGain: 1.0
         }
     },
 
