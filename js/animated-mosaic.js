@@ -8,18 +8,9 @@ const AnimatedMosaic = {
      * Configuration
      */
     config: {
-        // Grid sizes for different difficulty levels
-        gridSizes: {
-            easy: 2,      // 2x2 grid
-            medium: 3,    // 3x3 grid
-            hard: 4       // 4x4 grid
-        },
-        // Tiles per square (internal grid)
-        tilesPerSquare: {
-            easy: 8,
-            medium: 10,
-            hard: 12
-        },
+        // Grid sizes for single unified grid
+        gridSize: 18,          // Always 18x18 grid like Colorlite
+        outlierSize: 3,        // 3x3 outlier region
         // Animation parameters
         animation: {
             baseSpeed: 0.0008,      // Base animation speed
@@ -250,37 +241,47 @@ const AnimatedMosaic = {
         // Initialize noise with seed
         this.noise.init(seed);
         
-        // Get grid configuration
-        const gridSize = this.config.gridSizes[difficulty] || 3;
-        const tilesPerSquare = this.config.tilesPerSquare[difficulty] || 10;
+        // Use single grid size
+        const gridSize = this.config.gridSize;
+        const outlierSize = this.config.outlierSize;
         
         // Select palette
         const paletteList = type === 'control' ? this.palettes.control : this.palettes.deutan;
         const palette = Utils.randomPick(paletteList, rng);
         
-        // Determine outlier position
-        const totalSquares = gridSize * gridSize;
-        const outlierIndex = Math.floor(rng() * totalSquares);
+        // Determine outlier position (3x3 region within 18x18 grid)
+        // Ensure the 3x3 outlier doesn't go off edges
+        const maxRow = gridSize - outlierSize;
+        const maxCol = gridSize - outlierSize;
+        // Only allow outlier in inner 16x16 area to avoid edges
+        const outlierRow = Math.floor(rng() * (maxRow - 1)) + 1;
+        const outlierCol = Math.floor(rng() * (maxCol - 1)) + 1;
         
-        // Generate squares
-        const squares = [];
-        for (let i = 0; i < totalSquares; i++) {
-            const isOutlier = i === outlierIndex;
-            const row = Math.floor(i / gridSize);
-            const col = i % gridSize;
-            
-            squares.push({
-                index: i,
-                row,
-                col,
-                isOutlier,
-                baseColor: isOutlier ? palette.outlier : palette.background,
-                variance: palette.variance,
-                // Animation parameters - outlier may have slightly different params
-                animPhase: rng() * Math.PI * 2,
-                animSpeed: 1 + (isOutlier ? (rng() - 0.5) * 0.2 * subtlety : 0),
-                flowDirection: rng() * Math.PI * 2
-            });
+        // Generate tiles - each tile in the grid
+        const tiles = [];
+        for (let row = 0; row < gridSize; row++) {
+            for (let col = 0; col < gridSize; col++) {
+                const index = row * gridSize + col;
+                
+                // Check if this tile is part of the 3x3 outlier region
+                const isOutlier = (
+                    row >= outlierRow && row < outlierRow + outlierSize &&
+                    col >= outlierCol && col < outlierCol + outlierSize
+                );
+                
+                tiles.push({
+                    index,
+                    row,
+                    col,
+                    isOutlier,
+                    baseColor: isOutlier ? palette.outlier : palette.background,
+                    variance: palette.variance,
+                    // Animation parameters - each tile gets unique phase
+                    animPhase: rng() * Math.PI * 2,
+                    animSpeed: 1 + (rng() - 0.5) * 0.1,
+                    flowDirection: rng() * Math.PI * 2
+                });
+            }
         }
         
         const plate = {
@@ -289,10 +290,11 @@ const AnimatedMosaic = {
             type,
             subtlety,
             gridSize,
-            tilesPerSquare,
+            outlierSize,
+            outlierRow,
+            outlierCol,
             palette,
-            outlierIndex,
-            squares,
+            tiles,
             startTime: 0
         };
         
@@ -348,76 +350,66 @@ const AnimatedMosaic = {
         const plate = this.state.currentPlate;
         if (!plate) return;
         
-        const { gridSize, tilesPerSquare, squares } = plate;
+        const { gridSize, tiles } = plate;
         const canvasSize = this.canvas.width;
-        const squareSize = canvasSize / gridSize;
-        const gap = 4; // Gap between squares
-        const actualSquareSize = squareSize - gap;
-        const tileSize = actualSquareSize / tilesPerSquare;
+        const tileSize = canvasSize / gridSize;
         
         // Clear canvas
         this.ctx.fillStyle = '#1a1a2e';
         this.ctx.fillRect(0, 0, canvasSize, canvasSize);
         
-        // Render each square
-        squares.forEach(square => {
-            const squareX = square.col * squareSize + gap / 2;
-            const squareY = square.row * squareSize + gap / 2;
+        // Render all tiles
+        tiles.forEach(tile => {
+            const tileX = tile.col * tileSize;
+            const tileY = tile.row * tileSize;
             
-            this.renderSquare(square, squareX, squareY, actualSquareSize, tilesPerSquare, tileSize, time);
+            this.renderTile(tile, tileX, tileY, tileSize, time);
         });
     },
 
     /**
-     * Render a single large square with animated tiles
+     * Render a single tile with animation
      */
-    renderSquare(square, x, y, size, tileCount, tileSize, time) {
-        const { baseColor, variance, animPhase, animSpeed, flowDirection } = square;
+    renderTile(tile, x, y, size, time) {
+        const { baseColor, variance, animPhase, animSpeed, flowDirection } = tile;
         
         // Time factor for animation
         const t = this.config.reducedMotion ? 0 : time * this.config.animation.baseSpeed * animSpeed;
         
-        for (let row = 0; row < tileCount; row++) {
-            for (let col = 0; col < tileCount; col++) {
-                const tileX = x + col * tileSize;
-                const tileY = y + row * tileSize;
-                
-                // Calculate noise-based variation
-                const nx = col / tileCount;
-                const ny = row / tileCount;
-                
-                // Flowing noise field
-                const flowX = Math.cos(flowDirection) * t;
-                const flowY = Math.sin(flowDirection) * t;
-                
-                const noiseVal = this.noise.simplex2(
-                    nx * 3 + flowX + animPhase,
-                    ny * 3 + flowY
-                );
-                
-                const noiseVal2 = this.noise.simplex2(
-                    nx * 5 + t * 0.7,
-                    ny * 5 + animPhase
-                );
-                
-                // Calculate color with variation
-                const h = baseColor.h + noiseVal * variance.h;
-                const s = Utils.clamp(baseColor.s + noiseVal2 * variance.s, 20, 80);
-                const l = Utils.clamp(baseColor.l + noiseVal * variance.l, 30, 70);
-                
-                const rgb = Utils.hslToRgb(h, s, l);
-                
-                // Draw tile with slight padding
-                const padding = 0.5;
-                this.ctx.fillStyle = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-                this.ctx.fillRect(
-                    tileX + padding,
-                    tileY + padding,
-                    tileSize - padding * 2,
-                    tileSize - padding * 2
-                );
-            }
-        }
+        // Calculate noise-based variation
+        const nx = tile.col / this.config.gridSize;
+        const ny = tile.row / this.config.gridSize;
+        
+        // Flowing noise field
+        const flowX = Math.cos(flowDirection) * t;
+        const flowY = Math.sin(flowDirection) * t;
+        
+        const noiseVal = this.noise.simplex2(
+            nx * 3 + flowX + animPhase,
+            ny * 3 + flowY
+        );
+        
+        const noiseVal2 = this.noise.simplex2(
+            nx * 5 + t * 0.7,
+            ny * 5 + animPhase
+        );
+        
+        // Calculate color with variation
+        const h = baseColor.h + noiseVal * variance.h;
+        const s = Utils.clamp(baseColor.s + noiseVal2 * variance.s, 20, 80);
+        const l = Utils.clamp(baseColor.l + noiseVal * variance.l, 30, 70);
+        
+        const rgb = Utils.hslToRgb(h, s, l);
+        
+        // Draw tile with slight padding
+        const padding = 0.5;
+        this.ctx.fillStyle = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+        this.ctx.fillRect(
+            x + padding,
+            y + padding,
+            size - padding * 2,
+            size - padding * 2
+        );
     },
 
     /**
@@ -434,27 +426,36 @@ const AnimatedMosaic = {
         const x = (clientX - rect.left) * (this.canvas.width / rect.width);
         const y = (clientY - rect.top) * (this.canvas.height / rect.height);
         
-        // Determine which square was clicked
-        const { gridSize } = plate;
-        const squareSize = this.canvas.width / gridSize;
+        // Determine which tile was clicked
+        const { gridSize, outlierRow, outlierCol, outlierSize } = plate;
+        const tileSize = this.canvas.width / gridSize;
         
-        const col = Math.floor(x / squareSize);
-        const row = Math.floor(y / squareSize);
+        const col = Math.floor(x / tileSize);
+        const row = Math.floor(y / tileSize);
         
         if (col < 0 || col >= gridSize || row < 0 || row >= gridSize) {
             return null;
         }
         
-        const clickedIndex = row * gridSize + col;
+        // Check if click was in the 3x3 outlier region
+        const clickedInOutlier = (
+            row >= outlierRow && row < outlierRow + outlierSize &&
+            col >= outlierCol && col < outlierCol + outlierSize
+        );
+        
         const responseTime = performance.now() - this.state.startTime;
         
         // Stop animation
         this.pause();
         
         return {
-            selectedIndex: clickedIndex,
-            correctIndex: plate.outlierIndex,
-            isCorrect: clickedIndex === plate.outlierIndex,
+            selectedRow: row,
+            selectedCol: col,
+            clickedInOutlier,
+            outlierRow,
+            outlierCol,
+            outlierSize,
+            isCorrect: clickedInOutlier,
             responseTime,
             plateType: plate.type,
             difficulty: plate.difficulty
@@ -507,31 +508,27 @@ const AnimatedMosaic = {
             return;
         }
         
-        const { gridSize } = plate;
-        const squareSize = this.canvas.width / gridSize;
-        const gap = 4;
+        const { gridSize, outlierRow, outlierCol, outlierSize } = plate;
+        const tileSize = this.canvas.width / gridSize;
         
-        // Highlight correct answer
-        const correctRow = Math.floor(plate.outlierIndex / gridSize);
-        const correctCol = plate.outlierIndex % gridSize;
-        const correctX = correctCol * squareSize + gap / 2;
-        const correctY = correctRow * squareSize + gap / 2;
+        // Highlight correct 3x3 region
+        const correctX = outlierCol * tileSize;
+        const correctY = outlierRow * tileSize;
+        const highlightSize = outlierSize * tileSize;
         
-        // Draw highlight
+        // Draw highlight around the 3x3 outlier region
         this.ctx.strokeStyle = result.isCorrect ? '#28a745' : '#dc3545';
-        this.ctx.lineWidth = 4;
-        this.ctx.strokeRect(correctX, correctY, squareSize - gap, squareSize - gap);
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeRect(correctX, correctY, highlightSize, highlightSize);
         
         // If wrong, also show what was selected
-        if (!result.isCorrect && result.selectedIndex !== null) {
-            const selectedRow = Math.floor(result.selectedIndex / gridSize);
-            const selectedCol = result.selectedIndex % gridSize;
-            const selectedX = selectedCol * squareSize + gap / 2;
-            const selectedY = selectedRow * squareSize + gap / 2;
+        if (!result.isCorrect && result.selectedRow !== undefined && result.selectedCol !== undefined) {
+            const selectedX = result.selectedCol * tileSize;
+            const selectedY = result.selectedRow * tileSize;
             
             this.ctx.strokeStyle = 'rgba(255, 193, 7, 0.8)';
-            this.ctx.lineWidth = 3;
-            this.ctx.strokeRect(selectedX, selectedY, squareSize - gap, squareSize - gap);
+            this.ctx.lineWidth = 2;
+            this.ctx.strokeRect(selectedX, selectedY, tileSize, tileSize);
         }
         
         // Wait then callback
