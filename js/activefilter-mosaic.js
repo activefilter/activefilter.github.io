@@ -157,6 +157,11 @@ const ActiveFilterMosaic = (function() {
                 throw new Error(`Canvas not found: ${canvasSelector}`);
             }
             this.ctx = this.canvas.getContext('2d');
+            if (!this.ctx) {
+                console.error('Failed to get 2D context from canvas');
+                throw new Error('Canvas 2D context not available');
+            }
+            console.log('Canvas context initialized successfully');
             
             // Options with defaults
             this.options = {
@@ -414,22 +419,21 @@ const ActiveFilterMosaic = (function() {
         }
 
         /**
-         * Animation loop - renders frames at set intervals
+         * Animation loop - renders frames using requestAnimationFrame for Safari compatibility
          */
         startAnimation() {
             const animate = () => {
                 if (!this.isRunning) return;
                 
-                // Render multiple frames per cycle
-                for (let f = 1; f < CONFIG.animationFrames; f++) {
-                    setTimeout(() => this.renderFrame(), CONFIG.animationInterval * f);
-                }
+                // Render frame
+                this.renderFrame();
                 
-                // Schedule next cycle
-                this.animationTimer = setTimeout(animate, CONFIG.animationCycleDuration);
+                // Schedule next frame
+                this.animationTimer = requestAnimationFrame(animate);
             };
             
-            animate();
+            // Start animation
+            this.animationTimer = requestAnimationFrame(animate);
         }
 
         /**
@@ -455,6 +459,7 @@ const ActiveFilterMosaic = (function() {
          * Start the test sequence
          */
         start() {
+            console.log('Starting mosaic test...');
             this.isRunning = true;
             this.currentLevel = 0;
             this.correctAnswers = 0;
@@ -467,7 +472,12 @@ const ActiveFilterMosaic = (function() {
             
             this.updateInstruction(CONFIG.messages.instruction);
             this.updateProgress();
+            
+            // Initial render before starting animation (Safari fix)
+            this.renderFrame();
+            
             this.startAnimation();
+            console.log('Mosaic test started successfully');
         }
 
         /**
@@ -484,7 +494,7 @@ const ActiveFilterMosaic = (function() {
         stop() {
             this.isRunning = false;
             if (this.animationTimer) {
-                clearTimeout(this.animationTimer);
+                cancelAnimationFrame(this.animationTimer);
                 this.animationTimer = null;
             }
         }
@@ -583,6 +593,6 @@ const ActiveFilterMosaic = (function() {
 })();
 
 // Export for module systems
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
     module.exports = ActiveFilterMosaic;
 }
