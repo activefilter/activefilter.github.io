@@ -148,18 +148,25 @@ const ActiveFilterTestController = (function() {
     // Mosaic Initialization
     // ============================================
     function initializeMosaic() {
-        mosaicTest = ActiveFilterMosaic.create('#mosaic-canvas', {
-            onLevelComplete: handleLevelComplete,
-            onCategoryComplete: handleCategoryComplete,
-            onTestComplete: handleTestComplete,
-            onProgress: handleProgress,
-            getInstructionElement: () => elements.instruction,
-            getResultElements: () => ({
-                p1: elements.scoreRedGreen,
-                p2: elements.scorePurpleBlue,
-                p3: elements.scorePurpleGreen
-            })
-        });
+        try {
+            console.log('Initializing mosaic test...');
+            mosaicTest = ActiveFilterMosaic.create('#mosaic-canvas', {
+                onLevelComplete: handleLevelComplete,
+                onCategoryComplete: handleCategoryComplete,
+                onTestComplete: handleTestComplete,
+                onProgress: handleProgress,
+                getInstructionElement: () => elements.instruction,
+                getResultElements: () => ({
+                    p1: elements.scoreRedGreen,
+                    p2: elements.scorePurpleBlue,
+                    p3: elements.scorePurpleGreen
+                })
+            });
+            console.log('Mosaic test initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize mosaic test:', error);
+            alert('Failed to initialize the test. Please try refreshing the page.');
+        }
     }
 
     // ============================================
