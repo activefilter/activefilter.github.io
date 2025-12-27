@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ColorVision Pro - Color Vision Screening & Correction</title>
+    <meta name="description" content="Screen for red-green color vision deficiency and auto-tune a visual correction filter. Works entirely in your browser.">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👁️</text></svg>">
+</head>
+<body>
+    <div id="app">
+        <!-- Landing Screen -->
+        <section id="screen-landing" class="screen active">
+            <div class="container">
+                <header class="hero">
+                    <div class="logo">👁️ ColorVision Pro</div>
+                    <h1>Color Vision Screening & Correction</h1>
+                    <p class="subtitle">Screen for red-green color vision deficiency and discover a personalized visual correction filter</p>
+                </header>
+
+                <div class="card info-card">
+                    <h2>What This App Does</h2>
+                    <ul class="feature-list">
+                        <li>🎨 <strong>Mosaic Vision Test</strong> - Colorlite-style plates with colored tiles to detect red-green confusion</li>
+                        <li>📊 <strong>Severity Assessment</strong> - Estimates your level of color vision deficiency</li>
+                        <li>🔧 <strong>Auto-Tune Filter</strong> - Automatically calibrates a correction filter for your vision</li>
+                        <li>📹 <strong>Live Camera Overlay</strong> - Apply the filter to your camera in real-time</li>
+                        <li>💾 <strong>Export Results</strong> - Download your data as CSV or JSON</li>
+                    </ul>
+                </div>
+
+                <div class="card warning-card">
+                    <h2>⚠️ Important Disclaimer</h2>
+                    <p>This application is <strong>NOT a medical diagnostic tool</strong>. It is designed for educational and screening purposes only.</p>
+                    <ul>
+                        <li>Results are approximate and cannot replace professional eye examination</li>
+                        <li>If you suspect a color vision deficiency, please consult an eye care professional</li>
+                        <li>The correction filter is experimental and may vary in effectiveness</li>
+                        <li>All data is stored locally on your device - nothing is sent to any server</li>
+                    </ul>
+                </div>
+
+                <div class="card consent-card">
+                    <h2>Consent to Proceed</h2>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="consent-checkbox">
+                        <span class="checkmark"></span>
+                        <span>I understand this is not a medical diagnosis and I consent to proceed with the screening test</span>
+                    </label>
+                    <button id="btn-start" class="btn btn-primary btn-large" disabled>
+                        Begin Screening
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Calibration Screen -->
+        <section id="screen-calibration" class="screen">
+            <div class="container">
+                <header>
+                    <h1>Calibration Setup</h1>
+                    <p>Let's make sure your environment is ready for accurate testing</p>
+                </header>
+
+                <div class="calibration-steps">
+                    <div class="step-card" id="step-brightness">
+                        <div class="step-icon">☀️</div>
+                        <h3>Screen Brightness</h3>
+                        <p>Set your screen brightness to maximum or at least 80%</p>
+                        <div class="brightness-test">
+                            <div class="gradient-bar"></div>
+                            <p class="hint">You should see a smooth gradient with distinct shades</p>
+                        </div>
+                        <button class="btn btn-secondary step-confirm" data-step="brightness">
+                            ✓ Brightness is set
+                        </button>
+                    </div>
+
+                    <div class="step-card" id="step-lighting">
+                        <div class="step-icon">💡</div>
+                        <h3>Ambient Lighting</h3>
+                        <p>Ensure you're in a well-lit room without direct glare on your screen</p>
+                        <ul class="checklist">
+                            <li>No direct sunlight on screen</li>
+                            <li>Consistent room lighting</li>
+                            <li>No colored lights affecting display</li>
+                        </ul>
+                        <button class="btn btn-secondary step-confirm" data-step="lighting">
+                            ✓ Lighting is good
+                        </button>
+                    </div>
+
+                    <div class="step-card" id="step-distance">
+                        <div class="step-icon">📏</div>
+                        <h3>Viewing Distance</h3>
+                        <p>Sit at a comfortable distance from your screen (arm's length recommended)</p>
+                        <div class="distance-indicator">
+                            <span class="ruler">~50-70 cm / 20-28 inches</span>
+                        </div>
+                        <button class="btn btn-secondary step-confirm" data-step="distance">
+                            ✓ Distance is correct
+                        </button>
+                    </div>
+                </div>
+
+                <div class="system-check" id="system-check">
+                    <h3>System Compatibility</h3>
+                    <div class="check-items">
+                        <div class="check-item" id="check-canvas">
+                            <span class="check-status">⏳</span>
+                            <span>Canvas Support</span>
+                        </div>
+                        <div class="check-item" id="check-storage">
+                            <span class="check-status">⏳</span>
+                            <span>Local Storage</span>
+                        </div>
+                        <div class="check-item" id="check-camera">
+                            <span class="check-status">⏳</span>
+                            <span>Camera API (optional)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" id="btn-back-landing">Back</button>
+                    <button class="btn btn-primary" id="btn-start-test" disabled>Start Baseline Test</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Baseline Test Screen -->
+        <section id="screen-test" class="screen">
+            <div class="container test-container">
+                <header class="test-header">
+                    <div class="test-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="test-progress-fill"></div>
+                        </div>
+                        <span class="progress-text" id="test-progress-text">Plate 1 of 12</span>
+                    </div>
+                    <div class="test-timer" id="test-timer">00:00</div>
+                </header>
+
+                <div class="plate-container" id="plate-container">
+                    <canvas id="mosaic-canvas" width="400" height="400"></canvas>
+                </div>
+
+                <div class="response-area" id="response-area">
+                    <!-- Dynamic response UI will be inserted here -->
+                </div>
+
+                <div class="test-controls">
+                    <button class="btn btn-secondary" id="btn-skip-plate">Skip (Can't See)</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Screen -->
+        <section id="screen-results" class="screen">
+            <div class="container">
+                <header>
+                    <h1>Baseline Results</h1>
+                    <p>Your initial color vision assessment</p>
+                </header>
+
+                <div class="results-grid">
+                    <div class="result-card overall-score">
+                        <h3>Overall Score</h3>
+                        <div class="score-circle" id="overall-score">
+                            <span class="score-value">--</span>
+                            <span class="score-label">%</span>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>Red-Green Plates</h3>
+                        <div class="score-bar">
+                            <div class="bar-fill" id="rg-score-bar"></div>
+                        </div>
+                        <span class="score-text" id="rg-score-text">--/--</span>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>Control Plates</h3>
+                        <div class="score-bar">
+                            <div class="bar-fill control" id="control-score-bar"></div>
+                        </div>
+                        <span class="score-text" id="control-score-text">--/--</span>
+                    </div>
+
+                    <div class="result-card severity-card">
+                        <h3>Deuteranomaly Assessment</h3>
+                        <div class="severity-indicator" id="severity-indicator">
+                            <div class="severity-meter">
+                                <div class="meter-fill" id="severity-meter-fill"></div>
+                                <div class="meter-labels">
+                                    <span>None</span>
+                                    <span>Mild</span>
+                                    <span>Moderate</span>
+                                    <span>Strong</span>
+                                </div>
+                            </div>
+                            <div class="severity-label" id="severity-label">--</div>
+                        </div>
+                    </div>
+
+                    <div class="result-card timing-card">
+                        <h3>Response Statistics</h3>
+                        <div class="stats-grid">
+                            <div class="stat">
+                                <span class="stat-value" id="avg-time">--</span>
+                                <span class="stat-label">Avg. Response (s)</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value" id="total-time">--</span>
+                                <span class="stat-label">Total Time (s)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card info-card">
+                    <h2>What's Next?</h2>
+                    <p>Based on your results, we can auto-tune a correction filter that may help improve your red-green color discrimination. This involves several short retest rounds.</p>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" id="btn-skip-tuning">Skip to Export</button>
+                    <button class="btn btn-primary btn-large" id="btn-start-tuning">Auto-Tune Correction Filter</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tuning Screen -->
+        <section id="screen-tuning" class="screen">
+            <div class="container">
+                <header>
+                    <h1>Auto-Tuning Filter</h1>
+                    <p>We're calibrating a correction filter based on your responses</p>
+                </header>
+
+                <div class="tuning-status">
+                    <div class="tuning-round" id="tuning-round">
+                        Round <span id="current-round">1</span> of <span id="total-rounds">5</span>
+                    </div>
+                    <div class="tuning-progress">
+                        <div class="progress-bar large">
+                            <div class="progress-fill" id="tuning-progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-preview" id="filter-preview">
+                    <div class="preview-label">Current Filter Settings</div>
+                    <div class="filter-params">
+                        <div class="param">
+                            <span class="param-name">Shift</span>
+                            <span class="param-value" id="param-shift">0°</span>
+                        </div>
+                        <div class="param">
+                            <span class="param-name">Intensity</span>
+                            <span class="param-value" id="param-intensity">50%</span>
+                        </div>
+                        <div class="param">
+                            <span class="param-name">Saturation</span>
+                            <span class="param-value" id="param-saturation">100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="plate-container tuning-plate" id="tuning-plate-container">
+                    <canvas id="tuning-canvas" width="400" height="400"></canvas>
+                </div>
+
+                <div class="response-area" id="tuning-response-area">
+                    <!-- Dynamic response UI -->
+                </div>
+
+                <div class="tuning-info">
+                    <p id="tuning-message">Optimizing filter parameters...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Post-Tune Validation Screen -->
+        <section id="screen-validation" class="screen">
+            <div class="container">
+                <header>
+                    <h1>Filter Validation</h1>
+                    <p>Testing your tuned correction filter</p>
+                </header>
+
+                <div class="comparison-view">
+                    <div class="comparison-card baseline">
+                        <h3>Baseline</h3>
+                        <div class="comparison-score" id="baseline-compare-score">--</div>
+                        <div class="comparison-label">Before Filter</div>
+                    </div>
+                    <div class="comparison-arrow">→</div>
+                    <div class="comparison-card post-tune">
+                        <h3>With Filter</h3>
+                        <div class="comparison-score" id="posttune-compare-score">--</div>
+                        <div class="comparison-label">After Tuning</div>
+                    </div>
+                </div>
+
+                <div class="improvement-display" id="improvement-display">
+                    <div class="improvement-value" id="improvement-value">+0%</div>
+                    <div class="improvement-label">Score Improvement</div>
+                </div>
+
+                <div class="severity-comparison">
+                    <div class="severity-change">
+                        <span class="label">Severity:</span>
+                        <span class="before" id="severity-before">--</span>
+                        <span class="arrow">→</span>
+                        <span class="after" id="severity-after">--</span>
+                    </div>
+                </div>
+
+                <div class="final-filter-params card">
+                    <h3>Your Optimized Filter</h3>
+                    <div class="filter-params-display" id="final-filter-params">
+                        <!-- Filter params will be displayed here -->
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" id="btn-retune">Re-Tune Filter</button>
+                    <button class="btn btn-primary btn-large" id="btn-camera-mode">Try Camera Overlay</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Camera Overlay Screen -->
+        <section id="screen-camera" class="screen">
+            <div class="container camera-container">
+                <header>
+                    <h1>Live Camera Overlay</h1>
+                    <p>See the world with your correction filter applied</p>
+                </header>
+
+                <div class="camera-wrapper">
+                    <div class="camera-view" id="camera-view">
+                        <video id="camera-video" autoplay playsinline></video>
+                        <canvas id="camera-canvas"></canvas>
+                        <div class="camera-placeholder" id="camera-placeholder">
+                            <div class="placeholder-icon">📷</div>
+                            <p>Camera preview will appear here</p>
+                            <button class="btn btn-primary" id="btn-enable-camera">Enable Camera</button>
+                        </div>
+                        <div class="camera-error" id="camera-error" style="display: none;">
+                            <div class="error-icon">⚠️</div>
+                            <p id="camera-error-text">Camera access denied</p>
+                            <button class="btn btn-secondary" id="btn-retry-camera">Retry</button>
+                        </div>
+                    </div>
+
+                    <div class="camera-controls">
+                        <div class="control-group">
+                            <label class="toggle-label">
+                                <span>Filter</span>
+                                <input type="checkbox" id="filter-toggle" checked>
+                                <span class="toggle-switch"></span>
+                            </label>
+                        </div>
+
+                        <div class="control-group">
+                            <label>Intensity</label>
+                            <input type="range" id="filter-intensity" min="0" max="100" value="100">
+                            <span class="range-value" id="intensity-value">100%</span>
+                        </div>
+
+                        <div class="control-group">
+                            <button class="btn btn-secondary" id="btn-snapshot">📸 Take Snapshot</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" id="btn-back-validation">Back to Results</button>
+                    <button class="btn btn-primary" id="btn-go-export">Export Data</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Export Screen -->
+        <section id="screen-export" class="screen">
+            <div class="container">
+                <header>
+                    <h1>Export & Data Management</h1>
+                    <p>Download your results or manage stored sessions</p>
+                </header>
+
+                <div class="export-section">
+                    <h2>Export Current Session</h2>
+                    <div class="export-buttons">
+                        <button class="btn btn-primary" id="btn-export-json">
+                            📄 Download JSON
+                        </button>
+                        <button class="btn btn-primary" id="btn-export-csv">
+                            📊 Download CSV
+                        </button>
+                    </div>
+                    <p class="export-info">Exports include: timestamps, device info, all test results, filter parameters, and per-plate outcomes</p>
+                </div>
+
+                <div class="sessions-section">
+                    <h2>Stored Sessions</h2>
+                    <div class="sessions-list" id="sessions-list">
+                        <!-- Sessions will be listed here -->
+                    </div>
+                </div>
+
+                <div class="data-management">
+                    <h2>Data Management</h2>
+                    <p class="warning-text">All data is stored locally on your device. Clearing data cannot be undone.</p>
+                    <button class="btn btn-danger" id="btn-clear-data">
+                        🗑️ Clear All Local Data
+                    </button>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" id="btn-back-camera">Back</button>
+                    <button class="btn btn-primary" id="btn-new-session">Start New Session</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirm-modal">
+        <div class="modal-content">
+            <h3 id="modal-title">Confirm Action</h3>
+            <p id="modal-message">Are you sure?</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
+                <button class="btn btn-danger" id="modal-confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/mosaic-generator.js"></script>
+    <script src="js/color-filter.js"></script>
+    <script src="js/test-engine.js"></script>
+    <script src="js/tuning-engine.js"></script>
+    <script src="js/camera-overlay.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

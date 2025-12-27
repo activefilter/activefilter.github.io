@@ -4,9 +4,913 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ColorVision Pro - Color Vision Screening & Correction</title>
-    <meta name="description" content="Screen for red-green color vision deficiency and auto-tune a visual correction filter. Works entirely in your browser.">
-    <link rel="stylesheet" href="css/styles.css">
+    <meta name="description" content="Colorlite-style animated mosaic test to screen for red-green color vision deficiency (deuteranomaly). Get personalized camera filter correction.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👁️</text></svg>">
+    <style>
+        /* === CSS Variables === */
+        :root {
+            --color-primary: #4a90d9;
+            --color-primary-dark: #3a7bc8;
+            --color-secondary: #6c757d;
+            --color-success: #28a745;
+            --color-warning: #ffc107;
+            --color-danger: #dc3545;
+            --color-info: #17a2b8;
+            
+            --color-bg: #0f0f1a;
+            --color-bg-light: #1a1a2e;
+            --color-card: #16213e;
+            --color-text: #e8e8e8;
+            --color-text-light: #b0b0b0;
+            --color-text-muted: #666666;
+            --color-border: #2a2a4a;
+            
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.5);
+            
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.3s ease;
+        }
+
+        /* === Reset & Base === */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* === Typography === */
+        h1, h2, h3, h4 {
+            font-weight: 600;
+            line-height: 1.3;
+            margin-bottom: 0.5em;
+        }
+
+        h1 { font-size: 1.75rem; }
+        h2 { font-size: 1.35rem; }
+        h3 { font-size: 1.15rem; }
+
+        p { margin-bottom: 1em; }
+
+        a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        ul, ol {
+            margin-left: 1.5em;
+            margin-bottom: 1em;
+        }
+
+        li { margin-bottom: 0.5em; }
+
+        /* === Layout === */
+        #app {
+            min-height: 100vh;
+        }
+
+        .screen {
+            display: none;
+            min-height: 100vh;
+            padding: 1.5rem 1rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        /* === Hero === */
+        .hero {
+            padding: 1.5rem 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--color-primary);
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: var(--color-text-light);
+            max-width: 450px;
+            margin: 0 auto;
+        }
+
+        /* === Cards === */
+        .card {
+            background: var(--color-card);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--color-border);
+        }
+
+        .card h2, .card h3 {
+            margin-bottom: 0.75rem;
+        }
+
+        .info-card {
+            border-left: 4px solid var(--color-info);
+        }
+
+        .warning-card {
+            border-left: 4px solid var(--color-warning);
+            background: rgba(255, 193, 7, 0.1);
+        }
+
+        .consent-card {
+            border-left: 4px solid var(--color-primary);
+            text-align: center;
+        }
+
+        /* === Feature List === */
+        .feature-list {
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .feature-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        /* === Buttons === */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            text-decoration: none;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--color-primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--color-secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: var(--color-danger);
+            color: white;
+        }
+
+        .btn-large {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        /* === Checkbox === */
+        .checkbox-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            cursor: pointer;
+            text-align: left;
+            margin-bottom: 1rem;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+            accent-color: var(--color-primary);
+        }
+
+        /* === Calibration Steps === */
+        .calibration-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .step-card {
+            background: var(--color-card);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            border: 1px solid var(--color-border);
+            transition: all var(--transition-normal);
+        }
+
+        .step-card.confirmed {
+            border-color: var(--color-success);
+            background: rgba(40, 167, 69, 0.1);
+        }
+
+        .step-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-card h3 {
+            margin-bottom: 0.5rem;
+        }
+
+        .step-card p {
+            color: var(--color-text-light);
+            margin-bottom: 1rem;
+        }
+
+        .checklist {
+            list-style: none;
+            margin: 0 0 1rem 0;
+        }
+
+        .checklist li {
+            padding: 0.25rem 0;
+            color: var(--color-text-light);
+        }
+
+        .checklist li::before {
+            content: "• ";
+            color: var(--color-primary);
+        }
+
+        .gradient-bar {
+            height: 30px;
+            background: linear-gradient(to right, #000, #333, #666, #999, #ccc, #fff);
+            border-radius: var(--radius-sm);
+            margin-bottom: 0.5rem;
+        }
+
+        .hint {
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+            font-style: italic;
+        }
+
+        .distance-indicator {
+            text-align: center;
+            padding: 1rem;
+            background: var(--color-bg-light);
+            border-radius: var(--radius-sm);
+            margin-bottom: 1rem;
+        }
+
+        .ruler {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--color-primary);
+        }
+
+        /* === System Checks === */
+        .system-check {
+            background: var(--color-card);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--color-border);
+        }
+
+        .system-check h3 {
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+            color: var(--color-text-light);
+        }
+
+        .check-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .check-item.success .check-status { color: var(--color-success); }
+        .check-item.error .check-status { color: var(--color-danger); }
+        .check-item.warning .check-status { color: var(--color-warning); }
+
+        /* === Navigation Buttons === */
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        /* === Test Screen === */
+        .test-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .test-progress {
+            flex: 1;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--color-border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.25rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--color-primary);
+            transition: width var(--transition-normal);
+            width: 0%;
+        }
+
+        .progress-text {
+            font-size: 0.85rem;
+            color: var(--color-text-light);
+        }
+
+        .test-timer {
+            font-family: monospace;
+            font-size: 1.25rem;
+            color: var(--color-text-light);
+            margin-left: 1rem;
+        }
+
+        .test-instruction {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--color-text);
+            margin-bottom: 1rem;
+            min-height: 1.5em;
+        }
+
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        #test-canvas {
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            max-width: 100%;
+            touch-action: manipulation;
+        }
+
+        .test-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        /* === Results Screen === */
+        .results-grid {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-card {
+            background: var(--color-card);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            border: 1px solid var(--color-border);
+        }
+
+        .result-card h3 {
+            font-size: 0.9rem;
+            color: var(--color-text-light);
+            margin-bottom: 0.75rem;
+        }
+
+        .overall-score {
+            text-align: center;
+        }
+
+        .score-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: conic-gradient(var(--color-primary) var(--score-percent, 0%), var(--color-border) 0%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .score-circle::before {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: var(--color-card);
+            border-radius: 50%;
+        }
+
+        .score-circle .score-value {
+            position: relative;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .score-circle .score-label {
+            position: relative;
+            font-size: 0.8rem;
+            color: var(--color-text-light);
+        }
+
+        .score-bar {
+            height: 12px;
+            background: var(--color-border);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: var(--color-danger);
+            transition: width 0.5s ease;
+        }
+
+        .bar-fill.control {
+            background: var(--color-success);
+        }
+
+        .score-text {
+            font-size: 0.9rem;
+            color: var(--color-text-light);
+        }
+
+        /* === Severity Indicator === */
+        .severity-indicator {
+            margin: 1rem 0;
+        }
+
+        .severity-meter {
+            height: 12px;
+            background: linear-gradient(to right, 
+                var(--color-success) 0%, 
+                var(--color-success) 25%, 
+                var(--color-warning) 25%, 
+                var(--color-warning) 50%, 
+                #ff9500 50%, 
+                #ff9500 75%, 
+                var(--color-danger) 75%
+            );
+            border-radius: 6px;
+            position: relative;
+            margin-bottom: 0.5rem;
+        }
+
+        .meter-fill {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            top: -2px;
+            transform: translateX(-50%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: left 0.5s ease;
+        }
+
+        .meter-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+        }
+
+        .severity-label {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .severity-label.none { background: var(--color-success); color: white; }
+        .severity-label.mild { background: var(--color-warning); color: #333; }
+        .severity-label.moderate { background: #ff9500; color: white; }
+        .severity-label.strong { background: var(--color-danger); color: white; }
+        .severity-label.inconclusive { background: var(--color-secondary); color: white; }
+
+        .severity-description {
+            font-size: 0.9rem;
+            color: var(--color-text-light);
+            margin-top: 0.75rem;
+        }
+
+        /* === Stats Grid === */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--color-primary);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+        }
+
+        /* === Camera Screen === */
+        .camera-wrapper {
+            margin-bottom: 1.5rem;
+        }
+
+        .camera-view {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            background: var(--color-bg-light);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            aspect-ratio: 4/3;
+        }
+
+        #camera-video {
+            display: none;
+        }
+
+        #camera-canvas {
+            width: 100%;
+            height: 100%;
+            display: none;
+            object-fit: cover;
+        }
+
+        .camera-placeholder,
+        .camera-error {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .placeholder-icon,
+        .error-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .camera-error {
+            display: none;
+            background: rgba(220, 53, 69, 0.1);
+        }
+
+        .camera-controls {
+            background: var(--color-card);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-top: 1rem;
+            border: 1px solid var(--color-border);
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .control-group:last-child {
+            border-bottom: none;
+        }
+
+        .control-group label {
+            font-size: 0.9rem;
+        }
+
+        /* === Toggle Switch === */
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: var(--color-border);
+            border-radius: 12px;
+            transition: background var(--transition-fast);
+        }
+
+        .toggle-label input:checked + .toggle-switch {
+            background: var(--color-primary);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform var(--transition-fast);
+        }
+
+        .toggle-label input:checked + .toggle-switch::after {
+            transform: translateX(20px);
+        }
+
+        .toggle-label input {
+            display: none;
+        }
+
+        /* === Range Input === */
+        input[type="range"] {
+            flex: 1;
+            margin: 0 0.75rem;
+            accent-color: var(--color-primary);
+        }
+
+        .range-value {
+            min-width: 3em;
+            text-align: right;
+            font-size: 0.9rem;
+        }
+
+        /* === Filter Preview === */
+        .filter-preview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            background: var(--color-card);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            margin-top: 1rem;
+            border: 1px solid var(--color-border);
+        }
+
+        .filter-param {
+            text-align: center;
+        }
+
+        .param-name {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .param-value {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--color-primary);
+        }
+
+        /* === Export Screen === */
+        .export-section {
+            margin-bottom: 2rem;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .export-info {
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+        }
+
+        .sessions-list {
+            background: var(--color-card);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+            overflow: hidden;
+        }
+
+        .session-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .session-item:last-child {
+            border-bottom: none;
+        }
+
+        .session-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .session-date {
+            font-size: 0.9rem;
+        }
+
+        .session-score {
+            font-weight: 500;
+            color: var(--color-primary);
+        }
+
+        .session-severity {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: var(--radius-sm);
+            text-transform: capitalize;
+        }
+
+        .no-sessions {
+            padding: 2rem;
+            text-align: center;
+            color: var(--color-text-muted);
+        }
+
+        .data-management {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .warning-text {
+            color: var(--color-warning);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        /* === Modal === */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--color-card);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 0.75rem;
+        }
+
+        .modal-content p {
+            color: var(--color-text-light);
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        /* === Reduced Motion === */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* === Mobile Adjustments === */
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 0.75rem;
+            }
+
+            h1 { font-size: 1.5rem; }
+            h2 { font-size: 1.2rem; }
+
+            .btn-large {
+                padding: 0.875rem 1.5rem;
+                font-size: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-preview {
+                grid-template-columns: 1fr;
+            }
+
+            .session-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.25rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <div id="app">
@@ -15,41 +919,38 @@
             <div class="container">
                 <header class="hero">
                     <div class="logo">👁️ ColorVision Pro</div>
-                    <h1>Color Vision Screening & Correction</h1>
-                    <p class="subtitle">Screen for red-green color vision deficiency and discover a personalized visual correction filter</p>
+                    <h1>Color Vision Screening</h1>
+                    <p class="subtitle">Colorlite-style animated mosaic test to detect red-green color vision deficiency</p>
                 </header>
 
                 <div class="card info-card">
-                    <h2>What This App Does</h2>
+                    <h2>How It Works</h2>
                     <ul class="feature-list">
-                        <li>🎨 <strong>Mosaic Vision Test</strong> - Colorlite-style plates with colored tiles to detect red-green confusion</li>
-                        <li>📊 <strong>Severity Assessment</strong> - Estimates your level of color vision deficiency</li>
-                        <li>🔧 <strong>Auto-Tune Filter</strong> - Automatically calibrates a correction filter for your vision</li>
-                        <li>📹 <strong>Live Camera Overlay</strong> - Apply the filter to your camera in real-time</li>
-                        <li>💾 <strong>Export Results</strong> - Download your data as CSV or JSON</li>
+                        <li>🎯 <strong>Find the Outlier</strong> - Tap the square that looks different from the others</li>
+                        <li>🌀 <strong>Animated Tiles</strong> - Watch smoothly flowing colors in each square</li>
+                        <li>📊 <strong>Severity Assessment</strong> - Compare your performance on red-green vs control plates</li>
+                        <li>📹 <strong>Camera Filter</strong> - Get a personalized correction filter based on your results</li>
                     </ul>
                 </div>
 
                 <div class="card warning-card">
                     <h2>⚠️ Important Disclaimer</h2>
-                    <p>This application is <strong>NOT a medical diagnostic tool</strong>. It is designed for educational and screening purposes only.</p>
+                    <p>This is <strong>NOT a medical diagnostic tool</strong>. It is for educational and screening purposes only.</p>
                     <ul>
                         <li>Results are approximate and cannot replace professional eye examination</li>
-                        <li>If you suspect a color vision deficiency, please consult an eye care professional</li>
-                        <li>The correction filter is experimental and may vary in effectiveness</li>
-                        <li>All data is stored locally on your device - nothing is sent to any server</li>
+                        <li>Consult an eye care professional if you suspect color vision deficiency</li>
+                        <li>All data is stored locally on your device only</li>
                     </ul>
                 </div>
 
                 <div class="card consent-card">
-                    <h2>Consent to Proceed</h2>
+                    <h2>Ready to Begin?</h2>
                     <label class="checkbox-label">
                         <input type="checkbox" id="consent-checkbox">
-                        <span class="checkmark"></span>
-                        <span>I understand this is not a medical diagnosis and I consent to proceed with the screening test</span>
+                        <span>I understand this is not a medical diagnosis and consent to proceed</span>
                     </label>
                     <button id="btn-start" class="btn btn-primary btn-large" disabled>
-                        Begin Screening
+                        Start Screening
                     </button>
                 </div>
             </div>
@@ -59,8 +960,8 @@
         <section id="screen-calibration" class="screen">
             <div class="container">
                 <header>
-                    <h1>Calibration Setup</h1>
-                    <p>Let's make sure your environment is ready for accurate testing</p>
+                    <h1>Calibration</h1>
+                    <p>Prepare your environment for accurate results</p>
                 </header>
 
                 <div class="calibration-steps">
@@ -68,90 +969,86 @@
                         <div class="step-icon">☀️</div>
                         <h3>Screen Brightness</h3>
                         <p>Set your screen brightness to maximum or at least 80%</p>
-                        <div class="brightness-test">
-                            <div class="gradient-bar"></div>
-                            <p class="hint">You should see a smooth gradient with distinct shades</p>
-                        </div>
-                        <button class="btn btn-secondary step-confirm" data-step="brightness">
-                            ✓ Brightness is set
+                        <div class="gradient-bar"></div>
+                        <p class="hint">You should see distinct shades from black to white</p>
+                        <button class="btn btn-secondary step-confirm" data-step="brightness" data-original-text="✓ Brightness Set">
+                            ✓ Brightness Set
                         </button>
                     </div>
 
                     <div class="step-card" id="step-lighting">
                         <div class="step-icon">💡</div>
                         <h3>Ambient Lighting</h3>
-                        <p>Ensure you're in a well-lit room without direct glare on your screen</p>
+                        <p>Ensure you're in a well-lit room without glare on your screen</p>
                         <ul class="checklist">
                             <li>No direct sunlight on screen</li>
                             <li>Consistent room lighting</li>
-                            <li>No colored lights affecting display</li>
+                            <li>No colored lights</li>
                         </ul>
-                        <button class="btn btn-secondary step-confirm" data-step="lighting">
-                            ✓ Lighting is good
+                        <button class="btn btn-secondary step-confirm" data-step="lighting" data-original-text="✓ Lighting Good">
+                            ✓ Lighting Good
                         </button>
                     </div>
 
                     <div class="step-card" id="step-distance">
                         <div class="step-icon">📏</div>
                         <h3>Viewing Distance</h3>
-                        <p>Sit at a comfortable distance from your screen (arm's length recommended)</p>
+                        <p>Sit at a comfortable arm's length from your screen</p>
                         <div class="distance-indicator">
                             <span class="ruler">~50-70 cm / 20-28 inches</span>
                         </div>
-                        <button class="btn btn-secondary step-confirm" data-step="distance">
-                            ✓ Distance is correct
+                        <button class="btn btn-secondary step-confirm" data-step="distance" data-original-text="✓ Distance Set">
+                            ✓ Distance Set
                         </button>
                     </div>
                 </div>
 
-                <div class="system-check" id="system-check">
+                <div class="system-check">
                     <h3>System Compatibility</h3>
                     <div class="check-items">
                         <div class="check-item" id="check-canvas">
                             <span class="check-status">⏳</span>
-                            <span>Canvas Support</span>
+                            <span>Canvas</span>
                         </div>
                         <div class="check-item" id="check-storage">
                             <span class="check-status">⏳</span>
-                            <span>Local Storage</span>
+                            <span>Storage</span>
                         </div>
                         <div class="check-item" id="check-camera">
                             <span class="check-status">⏳</span>
-                            <span>Camera API (optional)</span>
+                            <span>Camera</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="nav-buttons">
                     <button class="btn btn-secondary" id="btn-back-landing">Back</button>
-                    <button class="btn btn-primary" id="btn-start-test" disabled>Start Baseline Test</button>
+                    <button class="btn btn-primary btn-large" id="btn-start-test" disabled>Begin Test</button>
                 </div>
             </div>
         </section>
 
-        <!-- Baseline Test Screen -->
+        <!-- Test Screen -->
         <section id="screen-test" class="screen">
-            <div class="container test-container">
-                <header class="test-header">
+            <div class="container">
+                <div class="test-header">
                     <div class="test-progress">
                         <div class="progress-bar">
                             <div class="progress-fill" id="test-progress-fill"></div>
                         </div>
-                        <span class="progress-text" id="test-progress-text">Plate 1 of 12</span>
+                        <span class="progress-text" id="test-progress-text">1 of 16</span>
                     </div>
                     <div class="test-timer" id="test-timer">00:00</div>
-                </header>
-
-                <div class="plate-container" id="plate-container">
-                    <canvas id="mosaic-canvas" width="400" height="400"></canvas>
                 </div>
 
-                <div class="response-area" id="response-area">
-                    <!-- Dynamic response UI will be inserted here -->
+                <p class="test-instruction" id="test-instruction">Tap the square that looks different</p>
+
+                <div class="canvas-container">
+                    <canvas id="test-canvas" width="400" height="400"></canvas>
                 </div>
 
                 <div class="test-controls">
-                    <button class="btn btn-secondary" id="btn-skip-plate">Skip (Can't See)</button>
+                    <button class="btn btn-secondary" id="btn-cant-tell">I Can't Tell</button>
                 </div>
             </div>
         </section>
@@ -160,57 +1057,58 @@
         <section id="screen-results" class="screen">
             <div class="container">
                 <header>
-                    <h1>Baseline Results</h1>
-                    <p>Your initial color vision assessment</p>
+                    <h1>Your Results</h1>
+                    <p>Color vision assessment summary</p>
                 </header>
 
                 <div class="results-grid">
-                    <div class="result-card overall-score">
-                        <h3>Overall Score</h3>
-                        <div class="score-circle" id="overall-score">
+                    <div class="result-card overall-score" id="overall-score">
+                        <h3>Overall Accuracy</h3>
+                        <div class="score-circle">
                             <span class="score-value">--</span>
                             <span class="score-label">%</span>
                         </div>
                     </div>
 
                     <div class="result-card">
-                        <h3>Red-Green Plates</h3>
+                        <h3>Red-Green Plates (Deutan)</h3>
                         <div class="score-bar">
-                            <div class="bar-fill" id="rg-score-bar"></div>
+                            <div class="bar-fill" id="deutan-score-bar" style="width: 0%"></div>
                         </div>
-                        <span class="score-text" id="rg-score-text">--/--</span>
+                        <span class="score-text" id="deutan-score-text">--/--</span>
                     </div>
 
                     <div class="result-card">
                         <h3>Control Plates</h3>
                         <div class="score-bar">
-                            <div class="bar-fill control" id="control-score-bar"></div>
+                            <div class="bar-fill control" id="control-score-bar" style="width: 0%"></div>
                         </div>
                         <span class="score-text" id="control-score-text">--/--</span>
                     </div>
 
-                    <div class="result-card severity-card">
-                        <h3>Deuteranomaly Assessment</h3>
-                        <div class="severity-indicator" id="severity-indicator">
+                    <div class="result-card">
+                        <h3>Deuteranomaly Indicator</h3>
+                        <div class="severity-indicator">
                             <div class="severity-meter">
-                                <div class="meter-fill" id="severity-meter-fill"></div>
-                                <div class="meter-labels">
-                                    <span>None</span>
-                                    <span>Mild</span>
-                                    <span>Moderate</span>
-                                    <span>Strong</span>
-                                </div>
+                                <div class="meter-fill" id="severity-meter-fill" style="left: 0%"></div>
                             </div>
-                            <div class="severity-label" id="severity-label">--</div>
+                            <div class="meter-labels">
+                                <span>None</span>
+                                <span>Mild</span>
+                                <span>Moderate</span>
+                                <span>Strong</span>
+                            </div>
                         </div>
+                        <span class="severity-label" id="severity-label">--</span>
+                        <p class="severity-description" id="severity-description"></p>
                     </div>
 
-                    <div class="result-card timing-card">
+                    <div class="result-card">
                         <h3>Response Statistics</h3>
                         <div class="stats-grid">
                             <div class="stat">
                                 <span class="stat-value" id="avg-time">--</span>
-                                <span class="stat-label">Avg. Response (s)</span>
+                                <span class="stat-label">Avg Response (s)</span>
                             </div>
                             <div class="stat">
                                 <span class="stat-value" id="total-time">--</span>
@@ -222,127 +1120,26 @@
 
                 <div class="card info-card">
                     <h2>What's Next?</h2>
-                    <p>Based on your results, we can auto-tune a correction filter that may help improve your red-green color discrimination. This involves several short retest rounds.</p>
+                    <p>Based on your results, we've created a personalized color correction filter. Try it on your camera to see if it helps distinguish colors more easily.</p>
                 </div>
 
                 <div class="nav-buttons">
-                    <button class="btn btn-secondary" id="btn-skip-tuning">Skip to Export</button>
-                    <button class="btn btn-primary btn-large" id="btn-start-tuning">Auto-Tune Correction Filter</button>
+                    <button class="btn btn-secondary" id="btn-skip-camera">Skip to Export</button>
+                    <button class="btn btn-primary btn-large" id="btn-try-camera">Try Camera Filter</button>
                 </div>
             </div>
         </section>
 
-        <!-- Tuning Screen -->
-        <section id="screen-tuning" class="screen">
-            <div class="container">
-                <header>
-                    <h1>Auto-Tuning Filter</h1>
-                    <p>We're calibrating a correction filter based on your responses</p>
-                </header>
-
-                <div class="tuning-status">
-                    <div class="tuning-round" id="tuning-round">
-                        Round <span id="current-round">1</span> of <span id="total-rounds">5</span>
-                    </div>
-                    <div class="tuning-progress">
-                        <div class="progress-bar large">
-                            <div class="progress-fill" id="tuning-progress-fill"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="filter-preview" id="filter-preview">
-                    <div class="preview-label">Current Filter Settings</div>
-                    <div class="filter-params">
-                        <div class="param">
-                            <span class="param-name">Shift</span>
-                            <span class="param-value" id="param-shift">0°</span>
-                        </div>
-                        <div class="param">
-                            <span class="param-name">Intensity</span>
-                            <span class="param-value" id="param-intensity">50%</span>
-                        </div>
-                        <div class="param">
-                            <span class="param-name">Saturation</span>
-                            <span class="param-value" id="param-saturation">100%</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="plate-container tuning-plate" id="tuning-plate-container">
-                    <canvas id="tuning-canvas" width="400" height="400"></canvas>
-                </div>
-
-                <div class="response-area" id="tuning-response-area">
-                    <!-- Dynamic response UI -->
-                </div>
-
-                <div class="tuning-info">
-                    <p id="tuning-message">Optimizing filter parameters...</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Post-Tune Validation Screen -->
-        <section id="screen-validation" class="screen">
-            <div class="container">
-                <header>
-                    <h1>Filter Validation</h1>
-                    <p>Testing your tuned correction filter</p>
-                </header>
-
-                <div class="comparison-view">
-                    <div class="comparison-card baseline">
-                        <h3>Baseline</h3>
-                        <div class="comparison-score" id="baseline-compare-score">--</div>
-                        <div class="comparison-label">Before Filter</div>
-                    </div>
-                    <div class="comparison-arrow">→</div>
-                    <div class="comparison-card post-tune">
-                        <h3>With Filter</h3>
-                        <div class="comparison-score" id="posttune-compare-score">--</div>
-                        <div class="comparison-label">After Tuning</div>
-                    </div>
-                </div>
-
-                <div class="improvement-display" id="improvement-display">
-                    <div class="improvement-value" id="improvement-value">+0%</div>
-                    <div class="improvement-label">Score Improvement</div>
-                </div>
-
-                <div class="severity-comparison">
-                    <div class="severity-change">
-                        <span class="label">Severity:</span>
-                        <span class="before" id="severity-before">--</span>
-                        <span class="arrow">→</span>
-                        <span class="after" id="severity-after">--</span>
-                    </div>
-                </div>
-
-                <div class="final-filter-params card">
-                    <h3>Your Optimized Filter</h3>
-                    <div class="filter-params-display" id="final-filter-params">
-                        <!-- Filter params will be displayed here -->
-                    </div>
-                </div>
-
-                <div class="nav-buttons">
-                    <button class="btn btn-secondary" id="btn-retune">Re-Tune Filter</button>
-                    <button class="btn btn-primary btn-large" id="btn-camera-mode">Try Camera Overlay</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Camera Overlay Screen -->
+        <!-- Camera Screen -->
         <section id="screen-camera" class="screen">
-            <div class="container camera-container">
+            <div class="container">
                 <header>
-                    <h1>Live Camera Overlay</h1>
-                    <p>See the world with your correction filter applied</p>
+                    <h1>Camera Filter</h1>
+                    <p>See the world with your personalized correction</p>
                 </header>
 
                 <div class="camera-wrapper">
-                    <div class="camera-view" id="camera-view">
+                    <div class="camera-view">
                         <video id="camera-video" autoplay playsinline></video>
                         <canvas id="camera-canvas"></canvas>
                         <div class="camera-placeholder" id="camera-placeholder">
@@ -350,9 +1147,9 @@
                             <p>Camera preview will appear here</p>
                             <button class="btn btn-primary" id="btn-enable-camera">Enable Camera</button>
                         </div>
-                        <div class="camera-error" id="camera-error" style="display: none;">
+                        <div class="camera-error" id="camera-error">
                             <div class="error-icon">⚠️</div>
-                            <p id="camera-error-text">Camera access denied</p>
+                            <p class="error-text">Camera access denied</p>
                             <button class="btn btn-secondary" id="btn-retry-camera">Retry</button>
                         </div>
                     </div>
@@ -360,7 +1157,7 @@
                     <div class="camera-controls">
                         <div class="control-group">
                             <label class="toggle-label">
-                                <span>Filter</span>
+                                <span>Filter Enabled</span>
                                 <input type="checkbox" id="filter-toggle" checked>
                                 <span class="toggle-switch"></span>
                             </label>
@@ -373,13 +1170,29 @@
                         </div>
 
                         <div class="control-group">
-                            <button class="btn btn-secondary" id="btn-snapshot">📸 Take Snapshot</button>
+                            <button class="btn btn-small btn-secondary" id="btn-snapshot">📸 Snapshot</button>
+                            <button class="btn btn-small btn-secondary" id="btn-switch-camera">🔄 Switch</button>
+                        </div>
+                    </div>
+
+                    <div class="filter-preview" id="filter-preview">
+                        <div class="filter-param">
+                            <span class="param-name">Hue Shift</span>
+                            <span class="param-value">--</span>
+                        </div>
+                        <div class="filter-param">
+                            <span class="param-name">R-G Enhance</span>
+                            <span class="param-value">--</span>
+                        </div>
+                        <div class="filter-param">
+                            <span class="param-name">Saturation</span>
+                            <span class="param-value">--</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="nav-buttons">
-                    <button class="btn btn-secondary" id="btn-back-validation">Back to Results</button>
+                    <button class="btn btn-secondary" id="btn-back-results">Back to Results</button>
                     <button class="btn btn-primary" id="btn-go-export">Export Data</button>
                 </div>
             </div>
@@ -389,41 +1202,34 @@
         <section id="screen-export" class="screen">
             <div class="container">
                 <header>
-                    <h1>Export & Data Management</h1>
-                    <p>Download your results or manage stored sessions</p>
+                    <h1>Export & Data</h1>
+                    <p>Download your results or manage saved sessions</p>
                 </header>
 
                 <div class="export-section">
                     <h2>Export Current Session</h2>
                     <div class="export-buttons">
-                        <button class="btn btn-primary" id="btn-export-json">
-                            📄 Download JSON
-                        </button>
-                        <button class="btn btn-primary" id="btn-export-csv">
-                            📊 Download CSV
-                        </button>
+                        <button class="btn btn-primary" id="btn-export-json">📄 Download JSON</button>
+                        <button class="btn btn-primary" id="btn-export-csv">📊 Download CSV</button>
                     </div>
-                    <p class="export-info">Exports include: timestamps, device info, all test results, filter parameters, and per-plate outcomes</p>
+                    <p class="export-info">Includes: plate outcomes, response times, severity assessment, and filter parameters</p>
                 </div>
 
-                <div class="sessions-section">
-                    <h2>Stored Sessions</h2>
+                <div class="export-section">
+                    <h2>Saved Sessions</h2>
                     <div class="sessions-list" id="sessions-list">
-                        <!-- Sessions will be listed here -->
+                        <p class="no-sessions">No saved sessions yet.</p>
                     </div>
                 </div>
 
                 <div class="data-management">
                     <h2>Data Management</h2>
-                    <p class="warning-text">All data is stored locally on your device. Clearing data cannot be undone.</p>
-                    <button class="btn btn-danger" id="btn-clear-data">
-                        🗑️ Clear All Local Data
-                    </button>
+                    <p class="warning-text">All data is stored locally. Clearing cannot be undone.</p>
+                    <button class="btn btn-danger" id="btn-clear-data">🗑️ Clear All Data</button>
                 </div>
 
                 <div class="nav-buttons">
-                    <button class="btn btn-secondary" id="btn-back-camera">Back</button>
-                    <button class="btn btn-primary" id="btn-new-session">Start New Session</button>
+                    <button class="btn btn-primary btn-large" id="btn-new-test">Start New Test</button>
                 </div>
             </div>
         </section>
@@ -443,13 +1249,11 @@
 
     <!-- Scripts -->
     <script src="js/utils.js"></script>
-    <script src="js/mosaic-generator.js"></script>
-    <script src="js/color-filter.js"></script>
-    <script src="js/test-engine.js"></script>
-    <script src="js/tuning-engine.js"></script>
-    <script src="js/camera-overlay.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/export.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/animated-mosaic.js"></script>
+    <script src="js/outlier-test-engine.js"></script>
+    <script src="js/adaptive-camera-filter.js"></script>
+    <script src="js/main-app.js"></script>
 </body>
 </html>
