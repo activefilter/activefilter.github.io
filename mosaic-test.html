@@ -470,21 +470,17 @@
     <script>
         // ============================================
         // JLTTCK Active Filter - Mosaic Test
-        // Based on proven colorlitelens.com implementation
+        // Adapted from working colorlitelens.com implementation
         // ============================================
 
         // Global Variables
-        var fwp = [];           // Particle array
-        var seged = [];         // Debug array
-        var tesztkocka = [];    // Target position per level
-        var hatterszin = [];    // Background color
-        var szin = [];          // Current color palette
-
-        // Gray calibration
-        var szinszurke = [0, 0, 60];
+        var particles = [];           // Particle array
+        var targetPositions = [];     // Target position per level
+        var backgroundColor = [];     // Background color
+        var currentPalette = [];      // Current color palette
 
         // Red-Green palette (20 levels) - [h, s, l] triplets
-        var szinr = [
+        var redGreenPalette = [
             0, 100, 28,   6, 98, 28,   11, 95, 28,  15, 93, 28,  19, 90, 27,
             27, 87, 26,   34, 84, 25,  40, 82, 26,  46, 80, 26,  59, 79, 26,
             72, 77, 25,   72, 76, 24,  72, 75, 22,  78, 76, 23,  83, 76, 23,
@@ -492,7 +488,7 @@
         ];
 
         // Purple-Blue palette (20 levels)
-        var szinp = [
+        var purpleBluePalette = [
             240, 100, 29, 243, 100, 29, 246, 100, 28, 249, 100, 27, 252, 100, 26,
             255, 100, 26, 258, 100, 25, 261, 100, 25, 264, 100, 24, 267, 100, 24,
             270, 100, 23, 273, 100, 22, 276, 100, 21, 279, 100, 21, 282, 100, 20,
@@ -500,7 +496,7 @@
         ];
 
         // Purple-Green palette (20 levels)
-        var szind = [
+        var purpleGreenPalette = [
             173, 37, 25,  176, 29, 27, 178, 23, 28, 183, 16, 29, 191, 10, 31,
             213, 7, 32,   260, 5, 32,  295, 8, 32,  311, 13, 33, 320, 18, 33,
             324, 22, 34,  324, 25, 34, 324, 28, 35, 327, 35, 35, 327, 42, 36,
@@ -508,47 +504,40 @@
         ];
 
         // Test state
-        var k = 0;
-        var fut = 0;                // Animation running flag
-        var hibazottmar = 0;        // Has missed once
-        var szint = 0;              // Current level (0-19)
-        var kovteszt = 0;           // Current category (0=R-G, 1=P-B, 2=P-G) - No calibration
-        var eredmeny = [0, 0, 0];   // Results percentages
-        var kockaszelesseg = 30;    // Tile size
+        var frameCount = 0;
+        var animationRunning = 0;
+        var hasMissedOnce = 0;
+        var currentLevel = 0;
+        var currentTest = 0;           // 0=R-G, 1=P-B, 2=P-G
+        var results = [0, 0, 0];
+        var tileSize = 30;
         var mousePos = { x: 0, y: 0 };
-        var szovegId;
+        var scoreElementId;
 
         // Messages
-        var szoveg = [
+        var messages = [
             "Click on the small square!",
             "Try again!",
             "Moving to next test..."
         ];
 
-        // Canvas Setup
+        // Canvas Setup - exactly like the working version
         var canvasBars = document.querySelector(".bars");
-        var ctxBars = null;
+        var ctxBars = canvasBars.getContext("2d");
 
-        // Responsive sizing - set dimensions BEFORE getting context for Safari compatibility
+        // Responsive sizing
         if (window.innerWidth < 760) {
-            kockaszelesseg = 16;
-            canvasBars.width = 320;
-            canvasBars.height = 330;
+            tileSize = 16;
+            canvasBars.width = "320";
+            canvasBars.height = "330";
         } else {
-            kockaszelesseg = 30;
-            canvasBars.width = 600;
-            canvasBars.height = 600;
-        }
-
-        // Get 2D context after setting dimensions (Safari/iOS fix)
-        ctxBars = canvasBars.getContext("2d", { willReadFrequently: false });
-        if (!ctxBars) {
-            console.error("Failed to get canvas 2D context");
+            tileSize = 30;
+            canvasBars.width = "600";
+            canvasBars.height = "600";
         }
 
         ctxBars.strokeStyle = ctxBars.fillStyle = 'hsl(80,70%,50%)';
-        canvasBars.addEventListener('mousedown', getMousePos);
-        canvasBars.addEventListener('touchstart', getTouchPos, { passive: false });
+        canvasBars.addEventListener('mousedown', handleMouseDown);
 
         // Particle Class
         function Particle(x, y, id, h, s, l, freq) {
@@ -562,7 +551,7 @@
             this.freq = freq;
             this.sinVal = Math.random() * 10;
 
-            this.ujszin = function() {
+            this.updateColor = function() {
                 self.sinVal = self.sinVal + self.freq;
                 self.l = self.l + Math.sin(self.sinVal * 3.14 / 2);
             };
@@ -570,247 +559,224 @@
 
         // I Don't See Button Handler
         function IdontSee() {
-            if (eredmeny[0] > 80) {
-                Vege();
+            if (results[0] > 80) {
+                endTest();
             } else {
-                kovteszt++;
-                Maincontroller();
+                currentTest++;
+                mainController();
             }
         }
 
         // Restart Test
         function restartTest() {
-            kovteszt = 0;
+            currentTest = 0;
             document.getElementById('p1').innerHTML = '0%';
             document.getElementById('p2').innerHTML = '0%';
             document.getElementById('p3').innerHTML = '0%';
-            eredmeny = [0, 0, 0];
-            Maincontroller();
+            results = [0, 0, 0];
+            mainController();
         }
 
         // Main Controller
-        function Maincontroller() {
-            szint = 0;
-            fut = 1;
-            hibazottmar = 0;
-            document.getElementById("komment").innerHTML = szoveg[0];
+        function mainController() {
+            currentLevel = 0;
+            animationRunning = 1;
+            hasMissedOnce = 0;
+            document.getElementById("komment").innerHTML = messages[0];
 
-            if (kovteszt > 2) {
-                Vege();
-                return;
+            if (currentTest > 2) {
+                endTest();
             }
 
-            if (kovteszt == 0) {
+            if (currentTest == 0) {
                 // Red-Green test
-                szint = 0;
-                hatterszin = [111, 78, 20];
-                szin = szinr;
-                szovegId = "p1";
-                Init(hatterszin);
-                tesztkockapoz();
-                veletlen(szin[3 * szint], szin[3 * szint + 1], szin[3 * szint + 2]);
+                currentLevel = 0;
+                backgroundColor = [111, 78, 20];
+                currentPalette = redGreenPalette;
+                scoreElementId = "p1";
+                initGrid(backgroundColor);
+                generateTargetPositions();
+                setTargetColor(currentPalette[3 * currentLevel], currentPalette[3 * currentLevel + 1], currentPalette[3 * currentLevel + 2]);
                 for (var j = 0; j < 6; j++) {
                     for (var i = 0; i < 324; i++) {
-                        fwp[i].ujszin();
+                        particles[i].updateColor();
                     }
                 }
-            } else if (kovteszt == 1) {
+                startRender();
+            } else if (currentTest == 1) {
                 // Purple-Blue test
-                szovegId = "p2";
-                hatterszin = [300, 100, 16];
-                szin = szinp;
-                Init(hatterszin);
-                tesztkockapoz();
-                veletlen(szin[3 * szint], szin[3 * szint + 1], szin[3 * szint + 2]);
+                scoreElementId = "p2";
+                backgroundColor = [300, 100, 16];
+                currentPalette = purpleBluePalette;
+                initGrid(backgroundColor);
+                generateTargetPositions();
+                setTargetColor(currentPalette[3 * currentLevel], currentPalette[3 * currentLevel + 1], currentPalette[3 * currentLevel + 2]);
                 for (var j = 0; j < 6; j++) {
                     for (var i = 0; i < 324; i++) {
-                        fwp[i].ujszin();
+                        particles[i].updateColor();
                     }
                 }
-            } else if (kovteszt == 2) {
+            } else if (currentTest == 2) {
                 // Purple-Green test
-                szovegId = "p3";
-                hatterszin = [323, 87, 34];
-                szin = szind;
-                Init(hatterszin);
-                tesztkockapoz();
-                veletlen(szin[3 * szint], szin[3 * szint + 1], szin[3 * szint + 2]);
+                scoreElementId = "p3";
+                backgroundColor = [323, 87, 34];
+                currentPalette = purpleGreenPalette;
+                initGrid(backgroundColor);
+                generateTargetPositions();
+                setTargetColor(currentPalette[3 * currentLevel], currentPalette[3 * currentLevel + 1], currentPalette[3 * currentLevel + 2]);
                 for (var j = 0; j < 6; j++) {
                     for (var i = 0; i < 324; i++) {
-                        fwp[i].ujszin();
+                        particles[i].updateColor();
                     }
                 }
             }
-            
-            // Start animation loop for all tests
-            startRender();
         }
 
         // Animation Loop
         function startRender() {
             var i = 0;
-            var szimszam = 10, idokoz = 50;
+            var frameCount = 10, interval = 50;
 
-            for (i = 1; i < szimszam; i++) {
-                setTimeout(render, idokoz * i);
+            for (i = 1; i < frameCount; i++) {
+                setTimeout(render, interval * i);
             }
 
-            if (fut) {
+            if (animationRunning) {
                 setTimeout(startRender, 510);
             }
         }
 
         // Initialize Grid
-        function Init(hsz) {
+        function initGrid(hsl) {
             var i = 0;
             var j = 0, x = 0, y = 0;
-            var oszlopok = 18;
-            var sorok = 18;
-            var totalWidth = oszlopok * kockaszelesseg;
-            var totalHeight = sorok * kockaszelesseg;
+            var columns = 18;
+            var rows = 18;
+            var totalWidth = columns * tileSize;
+            var totalHeight = rows * tileSize;
             var offsetX = (canvasBars.width - totalWidth) / 2;
             var offsetY = (canvasBars.height - totalHeight) / 2;
 
-            for (i = 0; i < oszlopok * sorok; i++) {
-                y = Math.floor(i / oszlopok);
-                x = i % oszlopok;
-                var h = hsz[0];
-                var s = hsz[1];
-                var l = hsz[2];
+            for (i = 0; i < columns * rows; i++) {
+                y = Math.floor(i / columns);
+                x = i % columns;
+                var h = hsl[0];
+                var s = hsl[1];
+                var l = hsl[2];
                 var f = 0.1 + Math.random() / 10;
-                fwp[i] = new Particle(x * kockaszelesseg + offsetX, y * kockaszelesseg + offsetY, i, h, s, l, f);
+                particles[i] = new Particle(x * tileSize + offsetX, y * tileSize + offsetY, i, h, s, l, f);
             }
         }
 
         // Generate Target Positions
-        function tesztkockapoz() {
-            for (var i = 0; i < szin.length / 3; i++) {
-                tesztkocka[i] = Math.floor(Math.random() * 16 + 1) * 18 + Math.floor(Math.random() * 16 + 1);
+        function generateTargetPositions() {
+            for (var i = 0; i < currentPalette.length / 3; i++) {
+                targetPositions[i] = Math.floor(Math.random() * 16 + 1) * 18 + Math.floor(Math.random() * 16 + 1);
             }
         }
 
         // Set Target Color
-        function veletlen(h, s, l) {
+        function setTargetColor(h, s, l) {
             var id;
             for (var i = -19; i < 18; i += 18) {
                 for (var j = 0; j < 3; j += 1) {
-                    id = tesztkocka[szint] + i + j;
-                    if (id >= 0 && id < fwp.length) {
-                        fwp[id].h = h;
-                        fwp[id].s = s;
-                        fwp[id].l = l;
-                    }
+                    id = targetPositions[currentLevel] + i + j;
+                    particles[id].h = h;
+                    particles[id].s = s;
+                    particles[id].l = l;
                 }
             }
         }
 
         // Handle Mouse Click
-        function getMousePos(event) {
+        function handleMouseDown(event) {
             var rect = canvasBars.getBoundingClientRect();
-            var kiskocka = fwp[tesztkocka[szint]];
+            var topLeft = { x: 0, y: 0 }, bottomRight = { x: 0, y: 0 };
+            var targetTile = particles[targetPositions[currentLevel]];
 
             mousePos = {
                 x: event.clientX - rect.left,
                 y: event.clientY - rect.top
             };
 
-            handleClick(mousePos.x, mousePos.y, kiskocka);
-        }
+            console.log(mousePos);
 
-        // Handle Touch
-        function getTouchPos(event) {
-            event.preventDefault();
-            var rect = canvasBars.getBoundingClientRect();
-            var touch = event.touches[0];
-            var kiskocka = fwp[tesztkocka[szint]];
+            if (currentLevel < targetPositions.length) {
+                topLeft = { x: targetTile.x - tileSize, y: targetTile.y - tileSize };
+                bottomRight = { x: targetTile.x + tileSize * 2, y: targetTile.y + tileSize * 2 };
 
-            mousePos = {
-                x: touch.clientX - rect.left,
-                y: touch.clientY - rect.top
-            };
-
-            handleClick(mousePos.x, mousePos.y, kiskocka);
-        }
-
-        // Common Click Handler
-        function handleClick(mx, my, kiskocka) {
-            if (szint < tesztkocka.length && kiskocka) {
-                var balfelso = { x: kiskocka.x - kockaszelesseg, y: kiskocka.y - kockaszelesseg };
-                var jobbalso = { x: kiskocka.x + kockaszelesseg * 2, y: kiskocka.y + kockaszelesseg * 2 };
-
-                if (balfelso.x < mx && balfelso.y < my && mx < jobbalso.x && my < jobbalso.y) {
+                if (topLeft.x < mousePos.x && topLeft.y < mousePos.y && mousePos.x < bottomRight.x && mousePos.y < bottomRight.y) {
                     // Correct click
-                    szint += 1;
-                    hibazottmar = 0;
-                    document.getElementById("komment").innerHTML = szoveg[0];
-                    document.getElementById(szovegId).innerHTML = parseInt(100 * (szint / 20)) + "%";
-                    eredmeny[Math.max(0, kovteszt)] = parseInt(100 * (szint / 20));
+                    currentLevel += 1;
+                    hasMissedOnce = 0;
+                    document.getElementById("komment").innerHTML = messages[0];
+                    document.getElementById(scoreElementId).innerHTML = parseInt(100 * (currentLevel / 20)) + "%";
+                    results[currentTest] = parseInt(100 * (currentLevel / 20));
 
-                    if (szint < tesztkocka.length) {
-                        Init(hatterszin);
-                        veletlen(szin[3 * szint], szin[3 * szint + 1], szin[3 * szint + 2]);
-                    } else if (kovteszt >= 2) {
-                        Vege();
-                    } else if (eredmeny[0] == 100) {
-                        Vege();
+                    if (currentLevel < targetPositions.length) {
+                        initGrid(backgroundColor);
+                        setTargetColor(currentPalette[3 * currentLevel], currentPalette[3 * currentLevel + 1], currentPalette[3 * currentLevel + 2]);
+                    } else if (currentTest == 3) {
+                        endTest();
+                    } else if (results[0] == 100) {
+                        endTest();
                     } else {
-                        kovteszt++;
-                        Maincontroller();
+                        currentTest++;
+                        mainController();
                     }
-                } else if (hibazottmar) {
-                    // Second miss - move to next category
-                    document.getElementById("komment").innerHTML = szoveg[2];
-                    kovteszt++;
-                    if (kovteszt > 2 || eredmeny[0] > 80) {
-                        Vege();
-                    } else {
-                        Maincontroller();
+                } else if (hasMissedOnce) {
+                    // Second miss
+                    document.getElementById("komment").innerHTML = messages[2];
+                    currentTest++;
+                    mainController();
+                    if ((currentTest == 3) || results[0] > 80) {
+                        endTest();
                     }
                 } else {
                     // First miss
-                    hibazottmar = 1;
-                    document.getElementById("komment").innerHTML = szoveg[1];
+                    hasMissedOnce = 1;
+                    document.getElementById("komment").innerHTML = messages[1];
                 }
             } else {
-                fut = 0;
+                animationRunning = 0;
             }
         }
 
         // Generate Diagnosis
-        function Diagnozis() {
-            var diag = "";
-            var sulyossag = "";
+        function generateDiagnosis() {
+            var diagnosis = "";
+            var severity = "";
 
-            if ((eredmeny[0] > 80) || ((eredmeny[0] == 80) && (eredmeny[1] > 75) && (eredmeny[2] > 80))) {
-                diag = "NORMAL RESULT";
-            } else if (eredmeny[2] < eredmeny[1]) {
-                diag = "DEUTAN TYPE OF COLOR VISION DEFICIENCY";
+            if ((results[0] > 80) || ((results[0] == 80) && (results[1] > 75) && (results[2] > 80))) {
+                diagnosis = "NORMAL RESULT";
+            } else if (results[2] < results[1]) {
+                diagnosis = "DEUTAN TYPE OF COLOR VISION DEFICIENCY";
             } else {
-                diag = "PROTAN TYPE OF COLOR VISION DEFICIENCY";
+                diagnosis = "PROTAN TYPE OF COLOR VISION DEFICIENCY";
             }
 
-            if ((eredmeny[0] < 25) && ((eredmeny[1] < 40) || (eredmeny[2] < 40))) {
-                sulyossag = "SEVERE ";
+            if ((results[0] < 25) && ((results[1] < 40) || (results[2] < 40))) {
+                severity = "SEVERE ";
             }
-            if ((eredmeny[0] > 25) && (eredmeny[0] < 60)) {
-                sulyossag = "MODERATE ";
+            if ((results[0] > 25) && (results[0] < 60)) {
+                severity = "MODERATE ";
             }
-            if ((eredmeny[0] > 60) && (eredmeny[0] < 80)) {
-                sulyossag = "MILD ";
+            if ((results[0] > 60) && (results[0] < 80)) {
+                severity = "MILD ";
             }
 
-            diag = "<b>" + sulyossag + diag + "</b><br><br>" +
+            diagnosis = "<b>" + severity + diagnosis + "</b><br><br>" +
                    "To learn more about color vision: " +
                    "<a class='myButton' href='index.html'>BACK TO HOME</a>";
 
-            document.getElementById("komment").innerHTML = "Diagnosis: " + diag;
+            document.getElementById("komment").innerHTML = "Diagnosis: " + diagnosis;
         }
 
         // End Test
-        function Vege() {
-            var i;
+        function endTest() {
+            var i, j = 0;
             // "END" pattern positions
-            var vegeid = [
+            var endPattern = [
                 128, 129, 130, 132, 136, 138, 139, 140,
                 146, 150, 151, 154, 156, 159,
                 164, 165, 168, 170, 172, 174, 177,
@@ -818,45 +784,30 @@
                 200, 201, 202, 204, 208, 210, 211, 212
             ];
 
-            fut = 0;  // Stop animation
-            Diagnozis();
-            
-            // Use current or default background
-            var bgColor = hatterszin.length ? hatterszin : [0, 0, 20];
-            Init(bgColor);
+            generateDiagnosis();
+            initGrid(backgroundColor);
 
-            for (i = 0; i < vegeid.length; i++) {
-                if (vegeid[i] < fwp.length) {
-                    fwp[vegeid[i]].h = 60;
-                    fwp[vegeid[i]].s = 99;
-                    fwp[vegeid[i]].l = 95;
-                }
+            for (i = 0; i < endPattern.length; i++) {
+                particles[endPattern[i]].h = 60;
+                particles[endPattern[i]].s = 99;
+                particles[endPattern[i]].l = 95;
             }
-
-            render();
         }
 
         // Render Frame
         function render() {
-            if (!ctxBars) return; // Safety check for context
-            
             ctxBars.clearRect(0, 0, canvasBars.width, canvasBars.height);
-            k = k + 1;
+            frameCount = frameCount + 1;
 
             for (var i = 0; i < 324; i++) {
-                if (fwp[i]) {
-                    fwp[i].ujszin();
-                    var hue = Math.round(fwp[i].h);
-                    var sat = Math.round(fwp[i].s);
-                    var light = Math.round(fwp[i].l);
-                    ctxBars.fillStyle = 'hsl(' + hue + ', ' + sat + '%, ' + light + '%)';
-                    ctxBars.fillRect(fwp[i].x, fwp[i].y, kockaszelesseg - 3, kockaszelesseg - 3);
-                }
+                particles[i].updateColor();
+                ctxBars.strokeStyle = ctxBars.fillStyle = 'hsl(' + particles[i].h + "," + particles[i].s + "%" + "," + particles[i].l + "%" + ')';
+                ctxBars.fillRect(particles[i].x, particles[i].y, tileSize - 3, tileSize - 3);
             }
         }
 
         // Start Test on Load
-        Maincontroller();
+        mainController();
     </script>
 </body>
 </html>
