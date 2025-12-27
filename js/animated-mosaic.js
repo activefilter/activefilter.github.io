@@ -1,6 +1,6 @@
 /**
  * ColorVision Pro - Animated Mosaic Test
- * Creates Colorlite-style animated mosaic grids with outlier detection
+ * Creates animated mosaic grids with outlier detection for the JLTTCK Active Filter
  */
 
 const AnimatedMosaic = {

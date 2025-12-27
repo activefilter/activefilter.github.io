@@ -1,7 +1,7 @@
 /**
- * Colorlite Mosaic Test Engine
+ * JLTTCK Active Filter - Mosaic Test Engine
  * 
- * A refactored implementation of the Colorlite-style mosaic color vision test.
+ * A mosaic color vision test for deuteranomaly screening.
  * Tests for red-green (deutan/protan), purple-blue, and purple-green confusion.
  * 
  * Features:
@@ -13,7 +13,7 @@
  * - Clean modular architecture
  */
 
-const ColorliteMosaic = (function() {
+const ActiveFilterMosaic = (function() {
     'use strict';
 
     // ============================================
@@ -662,5 +662,5 @@ const ColorliteMosaic = (function() {
 
 // Export for module systems
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = ColorliteMosaic;
+    module.exports = ActiveFilterMosaic;
 }

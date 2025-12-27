@@ -1,6 +1,6 @@
 /**
  * ColorVision Pro - Main Application
- * Colorlite-style animated mosaic test for detecting red-green color vision deficiency
+ * JLTTCK Active Filter - animated mosaic test for detecting red-green color vision deficiency (deuteranomaly)
  */
 
 const App = {

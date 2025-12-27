@@ -1,6 +1,6 @@
 /**
  * ColorVision Pro - Mosaic Plate Generator
- * Generates Colorlite-style mosaic plates with colored tiles
+ * Generates animated mosaic plates with colored tiles for the JLTTCK Active Filter
  */
 
 const MosaicGenerator = {

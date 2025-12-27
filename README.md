@@ -6,7 +6,7 @@ A static, client-only web app for screening red-green color vision deficiency (f
 
 ## Features
 
-- 🎨 **Mosaic Vision Test** - Colorlite-style plates with colored tiles (not Ishihara dots)
+- 🎨 **Mosaic Vision Test** - Animated mosaic plates with colored tiles (not Ishihara dots)
 - 📊 **Severity Assessment** - Estimates level of red-green color vision deficiency
 - 🔧 **Auto-Tune Filter** - Automatically calibrates a correction filter for your vision
 - 📹 **Live Camera Overlay** - Apply the tuned filter to your camera in real-time
@@ -137,6 +137,6 @@ Contributions welcome! Please:
 
 ## Acknowledgments
 
-- Inspired by Colorlite mosaic tests
+- JLTTCK Active Filter mosaic test methodology
 - Color confusion palettes based on deuteranomaly research
 - Filter algorithms adapted from color vision accessibility studies

@@ -1,11 +1,11 @@
 /**
- * Colorlite Test Controller
+ * JLTTCK Active Filter - Test Controller
  * 
  * Manages the overall test flow, UI updates, result storage and export.
- * Works with ColorliteMosaic for the visual test rendering.
+ * Works with ActiveFilterMosaic for the visual test rendering.
  */
 
-const ColorliteTestController = (function() {
+const ActiveFilterTestController = (function() {
     'use strict';
 
     // ============================================
@@ -140,15 +140,15 @@ const ColorliteTestController = (function() {
         }
         isTestActive = false;
         
-        // Go to Colorlite contact page
-        window.location.href = 'https://www.colorlitelens.com/contact.html';
+        // Return to main page
+        window.location.href = 'index.html';
     }
 
     // ============================================
     // Mosaic Initialization
     // ============================================
     function initializeMosaic() {
-        mosaicTest = ColorliteMosaic.create('#mosaic-canvas', {
+        mosaicTest = ActiveFilterMosaic.create('#mosaic-canvas', {
             onLevelComplete: handleLevelComplete,
             onCategoryComplete: handleCategoryComplete,
             onTestComplete: handleTestComplete,
@@ -233,16 +233,14 @@ const ColorliteTestController = (function() {
         
         // Description
         if (elements.diagnosisDescription) {
-            elements.diagnosisDescription.innerHTML = diagnosis.description + 
-                '<br><br>To get your personalized color blindness correction glasses: ' +
-                '<a class="cta-button" href="https://www.colorlitelens.com/contact.html">CLICK HERE</a>';
+            elements.diagnosisDescription.innerHTML = diagnosis.description;
         }
     }
 
     // ============================================
     // Storage
     // ============================================
-    const STORAGE_KEY = 'colorlite_sessions';
+    const STORAGE_KEY = 'activefilter_sessions';
 
     function saveSession(session) {
         try {
@@ -291,14 +289,14 @@ const ColorliteTestController = (function() {
             diagnosis: lastSession.diagnosis,
             metadata: {
                 version: '1.0',
-                testType: 'Colorlite Mosaic Test',
+                testType: 'JLTTCK Active Filter Mosaic Test',
                 exportedAt: new Date().toISOString()
             }
         };
         
         downloadFile(
             JSON.stringify(exportData, null, 2),
-            `colorlite-results-${formatDate(new Date())}.json`,
+            `activefilter-results-${formatDate(new Date())}.json`,
             'application/json'
         );
     }
@@ -327,7 +325,7 @@ const ColorliteTestController = (function() {
         
         downloadFile(
             csvContent,
-            `colorlite-results-${formatDate(new Date())}.csv`,
+            `activefilter-results-${formatDate(new Date())}.csv`,
             'text/csv'
         );
     }
@@ -373,7 +371,7 @@ const ColorliteTestController = (function() {
         cacheElements();
         bindEvents();
         
-        console.log('Colorlite Test Controller initialized');
+        console.log('JLTTCK Active Filter Test Controller initialized');
     }
 
     // Auto-initialize when DOM is ready
