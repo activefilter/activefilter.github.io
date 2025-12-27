@@ -286,8 +286,8 @@ const App = {
 
     startCalibration() {
         if (!this.elements.consentCheckbox?.checked) return;
-        this.showScreen('calibration');
-        this.runSystemChecks();
+        // Skip calibration screen, go directly to test
+        this.startTest();
     },
 
     // ========== Calibration Screen ==========

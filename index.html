@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ColorVision Pro - Color Vision Screening & Correction</title>
+    <title>JLTTCK Active Filter for Deuteranomaly</title>
     <meta name="description" content="JLTTCK Active Filter - animated mosaic test to screen for red-green color vision deficiency (deuteranomaly). Get personalized camera filter correction.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👁️</text></svg>">
     <style>
@@ -918,7 +918,7 @@
         <section id="screen-landing" class="screen active">
             <div class="container">
                 <header class="hero">
-                    <div class="logo">👁️ ColorVision Pro</div>
+                    <div class="logo">👁️ JLTTCK Active Filter for Deuteranomaly</div>
                     <h1>Color Vision Screening</h1>
                     <p class="subtitle">JLTTCK Active Filter - animated mosaic test to detect red-green color vision deficiency</p>
                 </header>
@@ -956,77 +956,8 @@
             </div>
         </section>
 
-        <!-- Calibration Screen -->
-        <section id="screen-calibration" class="screen">
-            <div class="container">
-                <header>
-                    <h1>Calibration</h1>
-                    <p>Prepare your environment for accurate results</p>
-                </header>
-
-                <div class="calibration-steps">
-                    <div class="step-card" id="step-brightness">
-                        <div class="step-icon">☀️</div>
-                        <h3>Screen Brightness</h3>
-                        <p>Set your screen brightness to maximum or at least 80%</p>
-                        <div class="gradient-bar"></div>
-                        <p class="hint">You should see distinct shades from black to white</p>
-                        <button class="btn btn-secondary step-confirm" data-step="brightness" data-original-text="✓ Brightness Set">
-                            ✓ Brightness Set
-                        </button>
-                    </div>
-
-                    <div class="step-card" id="step-lighting">
-                        <div class="step-icon">💡</div>
-                        <h3>Ambient Lighting</h3>
-                        <p>Ensure you're in a well-lit room without glare on your screen</p>
-                        <ul class="checklist">
-                            <li>No direct sunlight on screen</li>
-                            <li>Consistent room lighting</li>
-                            <li>No colored lights</li>
-                        </ul>
-                        <button class="btn btn-secondary step-confirm" data-step="lighting" data-original-text="✓ Lighting Good">
-                            ✓ Lighting Good
-                        </button>
-                    </div>
-
-                    <div class="step-card" id="step-distance">
-                        <div class="step-icon">📏</div>
-                        <h3>Viewing Distance</h3>
-                        <p>Sit at a comfortable arm's length from your screen</p>
-                        <div class="distance-indicator">
-                            <span class="ruler">~50-70 cm / 20-28 inches</span>
-                        </div>
-                        <button class="btn btn-secondary step-confirm" data-step="distance" data-original-text="✓ Distance Set">
-                            ✓ Distance Set
-                        </button>
-                    </div>
-                </div>
-
-                <div class="system-check">
-                    <h3>System Compatibility</h3>
-                    <div class="check-items">
-                        <div class="check-item" id="check-canvas">
-                            <span class="check-status">⏳</span>
-                            <span>Canvas</span>
-                        </div>
-                        <div class="check-item" id="check-storage">
-                            <span class="check-status">⏳</span>
-                            <span>Storage</span>
-                        </div>
-                        <div class="check-item" id="check-camera">
-                            <span class="check-status">⏳</span>
-                            <span>Camera</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="nav-buttons">
-                    <button class="btn btn-secondary" id="btn-back-landing">Back</button>
-                    <button class="btn btn-primary btn-large" id="btn-start-test" disabled>Begin Test</button>
-                </div>
-            </div>
-        </section>
+        <!-- Calibration Screen (removed - now skipping directly to test) -->
+        <section id="screen-calibration" class="screen" style="display: none;"></section>
 
         <!-- Test Screen -->
         <section id="screen-test" class="screen">
