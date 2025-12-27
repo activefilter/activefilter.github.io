@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <meta name="author" content="ColorVision Pro">
+    <meta name="description" content="Colorlite-style mosaic color vision test. Detect red-green color blindness (deuteranomaly, protanomaly). Free online color blind test.">
+    <title>Colorlite Mosaic Color Vision Test</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👁️</text></svg>">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ============================================
+           CSS Reset & Variables
+           ============================================ */
+        :root {
+            --color-bg: #000000;
+            --color-bg-elevated: #111111;
+            --color-text: #ffffff;
+            --color-text-muted: #888888;
+            --color-primary: #4a90d9;
+            --color-primary-hover: #5fa0e9;
+            --color-success: #28a745;
+            --color-warning: #ffc107;
+            --color-danger: #dc3545;
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --transition: 0.2s ease;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            background-color: var(--color-bg) !important;
+            color: var(--color-text);
+            font-family: var(--font-family);
+            font-size: 16px;
+            line-height: 1.5;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ============================================
+           Layout
+           ============================================ */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 15px;
+            min-height: 100vh;
+        }
+
+        .header {
+            margin-bottom: 10px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 10px 0 8px;
+            color: var(--color-text);
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--color-text-muted);
+            margin-bottom: 15px;
+        }
+
+        /* ============================================
+           Score Display
+           ============================================ */
+        .scores {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .score-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .score-label {
+            color: var(--color-text-muted);
+        }
+
+        .score-value {
+            font-weight: 600;
+            color: var(--color-primary);
+        }
+
+        /* ============================================
+           Instruction Text
+           ============================================ */
+        .instruction {
+            font-size: 18px;
+            margin: 8px 0 12px;
+            min-height: 27px;
+        }
+
+        /* ============================================
+           Canvas Container
+           ============================================ */
+        .canvas-container {
+            position: relative;
+            margin: 10px 0;
+        }
+
+        #mosaic-canvas {
+            display: block;
+            cursor: pointer;
+            touch-action: manipulation;
+            border-radius: 4px;
+        }
+
+        /* ============================================
+           Buttons
+           ============================================ */
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .btn {
+            font-family: var(--font-family);
+            font-size: 16px;
+            font-weight: 500;
+            padding: 12px 24px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all var(--transition);
+            min-width: 120px;
+            background-color: #f0f0f0;
+            color: #000;
+        }
+
+        .btn:hover:not(:disabled) {
+            background-color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--color-primary-hover);
+            border-color: var(--color-primary-hover);
+        }
+
+        .btn-danger {
+            background-color: var(--color-danger);
+            border-color: var(--color-danger);
+            color: #fff;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background-color: #e04455;
+            border-color: #e04455;
+        }
+
+        /* ============================================
+           Diagnosis Section
+           ============================================ */
+        .diagnosis {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: var(--color-bg-elevated);
+            border-radius: 12px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .diagnosis-type {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--color-warning);
+        }
+
+        .diagnosis-type.normal {
+            color: var(--color-success);
+        }
+
+        .diagnosis-severity {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-danger);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .diagnosis-description {
+            font-size: 15px;
+            color: var(--color-text-muted);
+            line-height: 1.6;
+        }
+
+        /* ============================================
+           CTA Button (Link styled as button)
+           ============================================ */
+        .cta-button {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 12px 30px;
+            background: linear-gradient(to bottom, #e67a73, #d1190c);
+            color: #fff !important;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 6px;
+            border: 1px solid #fff;
+            box-shadow: inset 0px 39px 7px -24px #e67a73;
+            text-shadow: 1px 1px 0px #382524;
+            transition: all var(--transition);
+        }
+
+        .cta-button:hover {
+            background: linear-gradient(to bottom, #f03c05, #d1190c);
+            transform: translateY(-2px);
+        }
+
+        /* ============================================
+           Export Section
+           ============================================ */
+        .export-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--color-bg-elevated);
+            border-radius: 8px;
+        }
+
+        .export-title {
+            font-size: 14px;
+            color: var(--color-text-muted);
+            margin-bottom: 10px;
+        }
+
+        .export-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .export-buttons .btn {
+            font-size: 14px;
+            padding: 8px 16px;
+            min-width: auto;
+        }
+
+        /* ============================================
+           Start Screen
+           ============================================ */
+        .start-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .start-screen .logo {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .start-screen .description {
+            max-width: 400px;
+            color: var(--color-text-muted);
+            margin-bottom: 30px;
+        }
+
+        .features {
+            list-style: none;
+            text-align: left;
+            margin: 20px 0;
+            padding: 0;
+        }
+
+        .features li {
+            padding: 8px 0;
+            color: var(--color-text-muted);
+        }
+
+        .features li::before {
+            content: "✓ ";
+            color: var(--color-success);
+            font-weight: bold;
+        }
+
+        /* ============================================
+           Hidden Utility
+           ============================================ */
+        .hidden {
+            display: none !important;
+        }
+
+        /* ============================================
+           Responsive Adjustments
+           ============================================ */
+        @media (max-width: 600px) {
+            .title {
+                font-size: 20px;
+            }
+
+            .scores {
+                font-size: 14px;
+            }
+
+            .instruction {
+                font-size: 16px;
+            }
+
+            .btn {
+                padding: 10px 18px;
+                font-size: 14px;
+                min-width: 100px;
+            }
+
+            .button-group {
+                gap: 8px;
+            }
+
+            .diagnosis {
+                padding: 15px;
+            }
+
+            .diagnosis-type {
+                font-size: 16px;
+            }
+
+            .diagnosis-description {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .button-group {
+                flex-direction: row;
+                flex-wrap: wrap;
+                width: 100%;
+                max-width: 320px;
+            }
+
+            .btn {
+                flex: 1 1 45%;
+            }
+
+            .btn:last-child:nth-child(odd) {
+                flex: 0 0 auto;
+                margin: 10px auto 0;
+            }
+
+            .export-buttons {
+                flex-direction: column;
+            }
+        }
+
+        /* ============================================
+           Reduced Motion
+           ============================================ */
+        @media (prefers-reduced-motion: reduce) {
+            .btn,
+            .cta-button {
+                transition: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="title">COLORLITE MOSAIC TEST</h1>
+        </header>
+
+        <!-- Score Display -->
+        <div class="scores">
+            <div class="score-item">
+                <span class="score-label">Red-Green:</span>
+                <span class="score-value" id="score-red-green">0%</span>
+            </div>
+            <div class="score-item">
+                <span class="score-label">Purple-Blue:</span>
+                <span class="score-value" id="score-purple-blue">0%</span>
+            </div>
+            <div class="score-item">
+                <span class="score-label">Purple-Green:</span>
+                <span class="score-value" id="score-purple-green">0%</span>
+            </div>
+        </div>
+
+        <!-- Instruction -->
+        <p class="instruction" id="instruction-text">Click on the small squares in the mosaic!</p>
+
+        <!-- Test Container -->
+        <div id="test-container" class="canvas-container hidden">
+            <canvas id="mosaic-canvas"></canvas>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="start-screen">
+            <div class="logo">👁️</div>
+            <p class="description">
+                This test screens for red-green color vision deficiency (deuteranomaly and protanomaly).
+                You'll see a grid of colored squares - click on the group that looks different.
+            </p>
+            <ul class="features">
+                <li>3 test categories (Red-Green, Purple-Blue, Purple-Green)</li>
+                <li>20 progressive difficulty levels each</li>
+                <li>Takes about 2-5 minutes</li>
+                <li>No data sent to servers - runs entirely in your browser</li>
+            </ul>
+            <button id="btn-start" class="btn btn-primary" style="font-size: 18px; padding: 15px 40px;">
+                Start Test
+            </button>
+        </div>
+
+        <!-- Control Buttons -->
+        <div id="control-buttons" class="button-group hidden">
+            <button id="btn-dont-see" class="btn">I Don't See</button>
+            <button id="btn-restart" class="btn">Restart</button>
+            <button id="btn-exit" class="btn btn-danger">Exit</button>
+        </div>
+
+        <!-- Diagnosis -->
+        <div id="diagnosis-container" class="diagnosis hidden">
+            <p id="diagnosis-severity" class="diagnosis-severity"></p>
+            <p id="diagnosis-type" class="diagnosis-type"></p>
+            <div id="diagnosis-description" class="diagnosis-description"></div>
+        </div>
+
+        <!-- Results Container (Export) -->
+        <div id="results-container" class="export-section hidden">
+            <p class="export-title">Export your results</p>
+            <div class="export-buttons">
+                <button id="btn-export-json" class="btn">Export JSON</button>
+                <button id="btn-export-csv" class="btn">Export CSV</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/colorlite-mosaic.js"></script>
+    <script src="js/colorlite-controller.js"></script>
+    <script>
+        // Additional initialization and UI coordination
+        document.addEventListener('DOMContentLoaded', function() {
+            const startBtn = document.getElementById('btn-start');
+            const startScreen = document.getElementById('start-screen');
+            const testContainer = document.getElementById('test-container');
+            const controlButtons = document.getElementById('control-buttons');
+
+            // Start button handler
+            startBtn.addEventListener('click', function() {
+                startScreen.classList.add('hidden');
+                testContainer.classList.remove('hidden');
+                controlButtons.classList.remove('hidden');
+            });
+
+            // Handle restart to show canvas
+            document.getElementById('btn-restart').addEventListener('click', function() {
+                testContainer.classList.remove('hidden');
+                document.getElementById('diagnosis-container').classList.add('hidden');
+                document.getElementById('results-container').classList.add('hidden');
+            });
+        });
+    </script>
+</body>
+</html>
