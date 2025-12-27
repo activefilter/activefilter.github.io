@@ -130,7 +130,11 @@ const ActiveFilterController = (function() {
             console.log('Mosaic test initialized successfully');
         } catch (error) {
             console.error('Failed to initialize mosaic test:', error);
-            alert('Failed to initialize the test. Please try refreshing the page.');
+            // Display error to user in a non-intrusive way
+            if (elements.instruction) {
+                elements.instruction.textContent = 'Error: Unable to initialize test. Please refresh the page.';
+                elements.instruction.style.color = 'red';
+            }
         }
     }
 
