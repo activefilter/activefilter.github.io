@@ -22,7 +22,7 @@ const ActiveFilterMosaic = (function() {
     const CONFIG = {
         // Grid settings
         gridSize: 18,
-        tilePadding: 3,
+        tilePadding: 0,
         
         // Canvas sizes
         desktop: {

@@ -10,7 +10,7 @@ const MosaicGenerator = {
     config: {
         defaultSize: 400,
         tileCountRange: [12, 16], // tiles per row/column
-        tilePadding: 1,
+        tilePadding: 0,
         borderRadius: 2
     },
 
