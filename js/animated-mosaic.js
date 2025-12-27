@@ -28,7 +28,7 @@ const AnimatedMosaic = {
             flowSpeed: 0.0005
         },
         // Timing
-        maxResponseTime: 30000,     // 30 seconds max
+        maxResponseTime: 3600000,     // 1 hour - effectively no limit
         // Reduced motion check
         reducedMotion: false
     },
@@ -317,14 +317,14 @@ const AnimatedMosaic = {
         const currentTime = performance.now();
         const elapsed = currentTime - this.state.startTime;
         
-        // Check timeout
-        if (elapsed > this.config.maxResponseTime) {
-            if (this.onTimeout) {
-                this.onTimeout();
-            }
-            this.stop();
-            return;
-        }
+        // Timeout disabled - no time limit
+        // if (elapsed > this.config.maxResponseTime) {
+        //     if (this.onTimeout) {
+        //         this.onTimeout();
+        //     }
+        //     this.stop();
+        //     return;
+        // }
         
         // Render frame
         this.renderFrame(currentTime);

@@ -324,12 +324,6 @@ const App = {
         // Initialize the animated mosaic
         AnimatedMosaic.init(this.elements.testCanvas);
         
-        // Set canvas size
-        const container = this.elements.testCanvas.parentElement;
-        const size = Math.min(container.clientWidth, 500);
-        this.elements.testCanvas.width = size;
-        this.elements.testCanvas.height = size;
-        
         // Initialize test engine
         OutlierTestEngine.init({
             mosaic: AnimatedMosaic,
@@ -343,13 +337,20 @@ const App = {
             }
         });
 
-        // Show test screen and start
+        // Show test screen FIRST so container has proper dimensions
         this.showScreen('test');
         this.testStartTime = Date.now();
         this.updateTimer();
         
-        // Small delay to let screen transition complete
+        // Small delay to let screen transition complete and get proper container size
         setTimeout(() => {
+            // Set canvas size AFTER screen is visible
+            const container = this.elements.testCanvas.parentElement;
+            const size = Math.min(container.clientWidth || 400, 500);
+            this.elements.testCanvas.width = size;
+            this.elements.testCanvas.height = size;
+            
+            // Now start the test
             OutlierTestEngine.start();
         }, 300);
     },
