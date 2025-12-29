@@ -614,6 +614,23 @@
             aspect-ratio: 4/3;
         }
 
+        .camera-view.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw;
+            margin: 0;
+            border-radius: 0;
+            z-index: 9999;
+            aspect-ratio: auto;
+        }
+
+        .camera-view.fullscreen #camera-canvas {
+            object-fit: contain;
+        }
+
         #camera-video {
             display: none;
         }
@@ -1103,6 +1120,7 @@
                         <div class="control-group">
                             <button class="btn btn-small btn-secondary" id="btn-snapshot">📸 Snapshot</button>
                             <button class="btn btn-small btn-secondary" id="btn-switch-camera">🔄 Switch</button>
+                            <button class="btn btn-small btn-secondary" id="btn-fullscreen">⛶ Fullscreen</button>
                         </div>
                     </div>
 
@@ -1160,7 +1178,94 @@
                 </div>
 
                 <div class="nav-buttons">
+                    <button class="btn btn-secondary" id="btn-about">ℹ️ About</button>
                     <button class="btn btn-primary btn-large" id="btn-new-test">Start New Test</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Screen -->
+        <section id="screen-about" class="screen">
+            <div class="container">
+                <header>
+                    <h1>About JLTTCK Active Filter</h1>
+                    <p>Understanding how this color vision screening tool works</p>
+                </header>
+
+                <div class="card info-card">
+                    <h2>🎯 What is This?</h2>
+                    <p>The JLTTCK Active Filter is a web-based screening tool designed to detect red-green color vision deficiency, specifically deuteranomaly (the most common form of color blindness affecting ~5% of males and ~0.4% of females).</p>
+                    <p>This is <strong>not a medical diagnostic tool</strong> – it's an educational and screening application that can help you understand your color vision and provide a personalized color correction filter.</p>
+                </div>
+
+                <div class="card">
+                    <h2>🔬 How Does It Work?</h2>
+                    
+                    <h3>1. Animated Mosaic Test</h3>
+                    <p>Unlike traditional Ishihara plates (which use static colored dots), our test uses <strong>animated mosaic tiles</strong>. Each plate consists of colored squares that smoothly animate through a range of hues. Your task is to identify the "outlier" square that differs from the others.</p>
+                    <ul>
+                        <li><strong>Red-Green Confusion Plates:</strong> These plates use color differences that are difficult for people with deuteranomaly to distinguish (reds, greens, browns, oranges)</li>
+                        <li><strong>Control Plates:</strong> These use easily distinguishable colors (blues, yellows, purples) to validate that you're paying attention and can see other color differences</li>
+                    </ul>
+
+                    <h3>2. Severity Assessment</h3>
+                    <p>The app compares your performance on red-green confusion plates versus control plates:</p>
+                    <ul>
+                        <li><strong>None:</strong> Similar accuracy on both types (normal color vision for tested range)</li>
+                        <li><strong>Mild:</strong> Slightly lower accuracy on red-green plates</li>
+                        <li><strong>Moderate:</strong> Noticeably lower accuracy on red-green plates (likely deuteranomaly)</li>
+                        <li><strong>Strong:</strong> Significant difficulty with red-green plates (definite deuteranomaly)</li>
+                    </ul>
+
+                    <h3>3. Adaptive Filter Generation</h3>
+                    <p>Based on your test results, the app generates a personalized color correction filter with these adjustments:</p>
+                    <ul>
+                        <li><strong>Hue Shift:</strong> Rotates colors to move problematic red-green hues into more distinguishable ranges</li>
+                        <li><strong>Red-Green Enhancement:</strong> Increases separation between red and green channels, shifting reds toward magenta and greens toward cyan</li>
+                        <li><strong>Saturation Boost:</strong> Makes colors more vibrant to increase perceptibility</li>
+                        <li><strong>Channel Gains:</strong> Adjusts individual RGB channels to enhance discrimination</li>
+                    </ul>
+
+                    <h3>4. Live Camera Filter</h3>
+                    <p>The personalized filter can be applied to your device's camera in real-time. This lets you see how the filter affects real-world colors and determine if it helps you distinguish colors more easily.</p>
+                </div>
+
+                <div class="card">
+                    <h2>🔒 Privacy & Data</h2>
+                    <ul>
+                        <li>All processing happens locally in your browser – no data is sent to any server</li>
+                        <li>Test results are stored only in your browser's local storage</li>
+                        <li>Camera access is only used for the live filter preview – no images are saved or transmitted</li>
+                        <li>You can clear all data at any time from the Export screen</li>
+                    </ul>
+                </div>
+
+                <div class="card warning-card">
+                    <h2>⚠️ Important Limitations</h2>
+                    <ul>
+                        <li>This is <strong>NOT</strong> a medical diagnosis tool</li>
+                        <li>Results are approximate and influenced by your screen's color accuracy, ambient lighting, and attention level</li>
+                        <li>The filter is experimental and effectiveness varies by individual</li>
+                        <li>If you suspect color vision deficiency, consult an eye care professional for proper testing</li>
+                        <li>The test only screens for deuteranomaly (red-green deficiency), not other types of color vision deficiency</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h2>💡 Technical Details</h2>
+                    <p><strong>Built with:</strong> Pure HTML5, CSS3, and vanilla JavaScript – no frameworks, no build step, no external dependencies</p>
+                    <p><strong>Technologies used:</strong></p>
+                    <ul>
+                        <li>Canvas API for mosaic rendering and real-time image processing</li>
+                        <li>MediaDevices API for camera access</li>
+                        <li>LocalStorage API for data persistence</li>
+                        <li>Fullscreen API for immersive camera view</li>
+                    </ul>
+                    <p><strong>Open Source:</strong> This project is MIT licensed and available on GitHub. Contributions are welcome!</p>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-primary btn-large" id="btn-back-export">Back to Export</button>
                 </div>
             </div>
         </section>
