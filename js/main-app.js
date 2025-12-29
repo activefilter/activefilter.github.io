@@ -38,6 +38,9 @@ const App = {
         this.checkSystemCapabilities();
         this.showScreen('landing');
         
+        // Listen for fullscreen changes
+        document.addEventListener('fullscreenchange', () => this.onFullscreenChange());
+        
         console.log('ColorVision Pro ready');
     },
 
@@ -52,7 +55,8 @@ const App = {
             test: document.getElementById('screen-test'),
             results: document.getElementById('screen-results'),
             camera: document.getElementById('screen-camera'),
-            export: document.getElementById('screen-export')
+            export: document.getElementById('screen-export'),
+            about: document.getElementById('screen-about')
         };
 
         // Landing
@@ -96,6 +100,7 @@ const App = {
         this.elements.cameraCanvas = document.getElementById('camera-canvas');
         this.elements.cameraPlaceholder = document.getElementById('camera-placeholder');
         this.elements.cameraError = document.getElementById('camera-error');
+        this.elements.cameraView = document.querySelector('.camera-view');
         this.elements.btnEnableCamera = document.getElementById('btn-enable-camera');
         this.elements.btnRetryCamera = document.getElementById('btn-retry-camera');
         this.elements.filterToggle = document.getElementById('filter-toggle');
@@ -103,6 +108,7 @@ const App = {
         this.elements.intensityValue = document.getElementById('intensity-value');
         this.elements.btnSnapshot = document.getElementById('btn-snapshot');
         this.elements.btnSwitchCamera = document.getElementById('btn-switch-camera');
+        this.elements.btnFullscreen = document.getElementById('btn-fullscreen');
         this.elements.btnBackResults = document.getElementById('btn-back-results');
         this.elements.btnGoExport = document.getElementById('btn-go-export');
         this.elements.filterPreview = document.getElementById('filter-preview');
@@ -113,6 +119,10 @@ const App = {
         this.elements.sessionsList = document.getElementById('sessions-list');
         this.elements.btnClearData = document.getElementById('btn-clear-data');
         this.elements.btnNewTest = document.getElementById('btn-new-test');
+        this.elements.btnAbout = document.getElementById('btn-about');
+
+        // About
+        this.elements.btnBackExport = document.getElementById('btn-back-export');
 
         // Modal
         this.elements.modal = document.getElementById('confirm-modal');
@@ -181,6 +191,9 @@ const App = {
         if (this.elements.btnSwitchCamera) {
             this.elements.btnSwitchCamera.addEventListener('click', () => this.switchCamera());
         }
+        if (this.elements.btnFullscreen) {
+            this.elements.btnFullscreen.addEventListener('click', () => this.toggleFullscreen());
+        }
         if (this.elements.btnBackResults) {
             this.elements.btnBackResults.addEventListener('click', () => this.showScreen('results'));
         }
@@ -200,6 +213,14 @@ const App = {
         }
         if (this.elements.btnNewTest) {
             this.elements.btnNewTest.addEventListener('click', () => this.startNewTest());
+        }
+        if (this.elements.btnAbout) {
+            this.elements.btnAbout.addEventListener('click', () => this.showScreen('about'));
+        }
+
+        // About
+        if (this.elements.btnBackExport) {
+            this.elements.btnBackExport.addEventListener('click', () => this.showExportScreen());
         }
 
         // Modal
@@ -536,6 +557,46 @@ const App = {
 
     switchCamera() {
         AdaptiveCameraFilter.switchCamera();
+    },
+
+    toggleFullscreen() {
+        if (!this.elements.cameraView) return;
+
+        const isFullscreen = this.elements.cameraView.classList.contains('fullscreen');
+
+        if (isFullscreen) {
+            // Exit fullscreen
+            this.elements.cameraView.classList.remove('fullscreen');
+            if (this.elements.btnFullscreen) {
+                this.elements.btnFullscreen.textContent = '⛶ Fullscreen';
+            }
+            // Exit browser fullscreen API if active
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+        } else {
+            // Enter fullscreen
+            this.elements.cameraView.classList.add('fullscreen');
+            if (this.elements.btnFullscreen) {
+                this.elements.btnFullscreen.textContent = '✕ Exit Fullscreen';
+            }
+            // Try to use browser fullscreen API for true fullscreen
+            if (this.elements.cameraView.requestFullscreen) {
+                this.elements.cameraView.requestFullscreen().catch(err => {
+                    console.log('Fullscreen request failed:', err);
+                });
+            }
+        }
+    },
+
+    onFullscreenChange() {
+        // Sync our fullscreen state with browser fullscreen state
+        if (!document.fullscreenElement && this.elements.cameraView) {
+            this.elements.cameraView.classList.remove('fullscreen');
+            if (this.elements.btnFullscreen) {
+                this.elements.btnFullscreen.textContent = '⛶ Fullscreen';
+            }
+        }
     },
 
     updateFilterPreview() {
