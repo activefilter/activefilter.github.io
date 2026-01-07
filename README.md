@@ -1,4 +1,4 @@
-# ColorVision Pro
+# JLTTCK ACTIVE FILTER
 
 A static, client-only web app for screening red-green color vision deficiency (focus: deuteranomaly) using Mosaic Tests. The app auto-tunes a visual correction filter, validates improvement, and optionally applies the filter as a live camera overlay.
 
