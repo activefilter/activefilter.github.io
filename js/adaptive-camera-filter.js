@@ -37,6 +37,16 @@ const AdaptiveCameraFilter = {
 
     /**
      * Default filter presets based on severity
+     * Calibrated to normalize color perception while maintaining color balance:
+     * - Input (without filter): Blue=100, Green=59.3, Red=79
+     * - Target output: Blue=100, Green=100, Red=100
+     * 
+     * Key insight: Boosting red and green without boosting blue causes blue 
+     * to appear relatively weaker, leading to 0% blue on colorblindness tests.
+     * 
+     * Solution: Boost blue proportionally to maintain overall color balance.
+     * For strong preset: redGain=1.27, greenGain=1.69, blueGain=1.27
+     * (blueGain matches redGain to maintain red-blue balance)
      */
     presets: {
         none: {
@@ -49,40 +59,40 @@ const AdaptiveCameraFilter = {
             blueGain: 1.0
         },
         mild: {
-            hueShift: 12,
-            redGreenEnhance: 0.15,
-            saturationBoost: 10,
-            contrastBoost: 5,
-            redGain: 1.1,
-            greenGain: 0.95,
-            blueGain: 1.0
+            hueShift: 0,
+            redGreenEnhance: 0,
+            saturationBoost: 5,
+            contrastBoost: 3,
+            redGain: 1.07,
+            greenGain: 1.17,
+            blueGain: 1.07
         },
         moderate: {
-            hueShift: 25,
-            redGreenEnhance: 0.28,
-            saturationBoost: 18,
-            contrastBoost: 8,
-            redGain: 1.2,
-            greenGain: 0.88,
-            blueGain: 1.0
+            hueShift: 0,
+            redGreenEnhance: 0,
+            saturationBoost: 8,
+            contrastBoost: 5,
+            redGain: 1.17,
+            greenGain: 1.43,
+            blueGain: 1.17
         },
         strong: {
-            hueShift: 40,
-            redGreenEnhance: 0.42,
-            saturationBoost: 25,
-            contrastBoost: 12,
-            redGain: 1.35,
-            greenGain: 0.78,
-            blueGain: 1.02
+            hueShift: 0,
+            redGreenEnhance: 0,
+            saturationBoost: 10,
+            contrastBoost: 8,
+            redGain: 1.27,
+            greenGain: 1.69,
+            blueGain: 1.27
         },
         inconclusive: {
-            hueShift: 15,
-            redGreenEnhance: 0.20,
-            saturationBoost: 12,
-            contrastBoost: 6,
-            redGain: 1.15,
-            greenGain: 0.92,
-            blueGain: 1.0
+            hueShift: 0,
+            redGreenEnhance: 0,
+            saturationBoost: 6,
+            contrastBoost: 4,
+            redGain: 1.12,
+            greenGain: 1.30,
+            blueGain: 1.12
         }
     },
 
@@ -145,6 +155,7 @@ const AdaptiveCameraFilter = {
 
     /**
      * Tune filter based on test results
+     * Uses calibrated gain values to normalize color perception
      */
     tuneFromResults(results) {
         const { severity } = results;
@@ -152,15 +163,13 @@ const AdaptiveCameraFilter = {
         // Start from the preset for this severity
         this.applyPreset(severity.bucket);
         
-        // Fine-tune based on the performance gap
+        // Fine-tune saturation based on the performance gap for better distinction
         if (severity.performanceGap !== undefined) {
             const gapFactor = Math.min(severity.performanceGap / 50, 1);
             
-            // Increase hue shift for larger gaps
-            this.filterParams.hueShift *= (1 + gapFactor * 0.3);
-            
-            // Increase red-green enhancement
-            this.filterParams.redGreenEnhance *= (1 + gapFactor * 0.2);
+            // Increase saturation by up to 15% for maximum performance gaps
+            // This helps users distinguish colors more easily without affecting the calibrated gains
+            this.filterParams.saturationBoost *= (1 + gapFactor * 0.15);
         }
 
         return this.filterParams;
