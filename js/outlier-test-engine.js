@@ -27,7 +27,7 @@ const OutlierTestEngine = {
         tuningPlateCount: 8,
         validationPlateCount: 12,
         feedbackDelay: 1200,
-        plateTransitionDelay: 500
+        plateTransitionDelay: 0
     },
 
     /**
