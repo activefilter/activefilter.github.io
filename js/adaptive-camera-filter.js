@@ -53,8 +53,8 @@ const AdaptiveCameraFilter = {
             redGreenEnhance: 0.15,
             saturationBoost: 10,
             contrastBoost: 5,
-            redGain: 1.1,
-            greenGain: 0.95,
+            redGain: 1.266,
+            greenGain: 1.686,
             blueGain: 1.0
         },
         moderate: {
@@ -62,8 +62,8 @@ const AdaptiveCameraFilter = {
             redGreenEnhance: 0.28,
             saturationBoost: 18,
             contrastBoost: 8,
-            redGain: 1.2,
-            greenGain: 0.88,
+            redGain: 1.266,
+            greenGain: 1.686,
             blueGain: 1.0
         },
         strong: {
@@ -71,17 +71,17 @@ const AdaptiveCameraFilter = {
             redGreenEnhance: 0.42,
             saturationBoost: 25,
             contrastBoost: 12,
-            redGain: 1.35,
-            greenGain: 0.78,
-            blueGain: 1.02
+            redGain: 1.266,
+            greenGain: 1.686,
+            blueGain: 1.0
         },
         inconclusive: {
             hueShift: 15,
             redGreenEnhance: 0.20,
             saturationBoost: 12,
             contrastBoost: 6,
-            redGain: 1.15,
-            greenGain: 0.92,
+            redGain: 1.266,
+            greenGain: 1.686,
             blueGain: 1.0
         }
     },
