@@ -42,9 +42,9 @@ const AdaptiveCameraFilter = {
      * - Target output: Blue=100, Green=100, Red=100
      * 
      * Base gains calculated as:
-     * - redGain = 100/79 ≈ 1.27
-     * - greenGain = 100/59.3 ≈ 1.69
-     * - blueGain = 1.0
+     * - redGain = 100/79 = 1.27 (rounded to 2 decimal places)
+     * - greenGain = 100/59.3 = 1.69 (rounded to 2 decimal places)
+     * - blueGain = 1.0 (no adjustment needed)
      */
     presets: {
         none: {
@@ -165,7 +165,8 @@ const AdaptiveCameraFilter = {
         if (severity.performanceGap !== undefined) {
             const gapFactor = Math.min(severity.performanceGap / 50, 1);
             
-            // Slightly increase saturation for larger gaps to aid color distinction
+            // Increase saturation by up to 15% for maximum performance gaps
+            // This helps users distinguish colors more easily without affecting the calibrated gains
             this.filterParams.saturationBoost *= (1 + gapFactor * 0.15);
         }
 
