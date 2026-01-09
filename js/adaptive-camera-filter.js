@@ -37,14 +37,16 @@ const AdaptiveCameraFilter = {
 
     /**
      * Default filter presets based on severity
-     * Calibrated to normalize color perception:
+     * Calibrated to normalize color perception while maintaining color balance:
      * - Input (without filter): Blue=100, Green=59.3, Red=79
      * - Target output: Blue=100, Green=100, Red=100
      * 
-     * Base gains calculated as:
-     * - redGain = 100/79 = 1.27 (rounded to 2 decimal places)
-     * - greenGain = 100/59.3 = 1.69 (rounded to 2 decimal places)
-     * - blueGain = 1.0 (no adjustment needed)
+     * Key insight: Boosting red and green without boosting blue causes blue 
+     * to appear relatively weaker, leading to 0% blue on colorblindness tests.
+     * 
+     * Solution: Boost blue proportionally to maintain overall color balance.
+     * For strong preset: redGain=1.27, greenGain=1.69, blueGain=1.27
+     * (blueGain matches redGain to maintain red-blue balance)
      */
     presets: {
         none: {
@@ -63,7 +65,7 @@ const AdaptiveCameraFilter = {
             contrastBoost: 3,
             redGain: 1.07,
             greenGain: 1.17,
-            blueGain: 1.0
+            blueGain: 1.07
         },
         moderate: {
             hueShift: 0,
@@ -72,7 +74,7 @@ const AdaptiveCameraFilter = {
             contrastBoost: 5,
             redGain: 1.17,
             greenGain: 1.43,
-            blueGain: 1.0
+            blueGain: 1.17
         },
         strong: {
             hueShift: 0,
@@ -81,7 +83,7 @@ const AdaptiveCameraFilter = {
             contrastBoost: 8,
             redGain: 1.27,
             greenGain: 1.69,
-            blueGain: 1.0
+            blueGain: 1.27
         },
         inconclusive: {
             hueShift: 0,
@@ -90,7 +92,7 @@ const AdaptiveCameraFilter = {
             contrastBoost: 4,
             redGain: 1.12,
             greenGain: 1.30,
-            blueGain: 1.0
+            blueGain: 1.12
         }
     },
 
