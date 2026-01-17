@@ -26,7 +26,7 @@ const OutlierTestEngine = {
         baselinePlateCount: 16,
         tuningPlateCount: 8,
         validationPlateCount: 12,
-        feedbackDelay: 1200,
+        feedbackDelay: 0,
         plateTransitionDelay: 0
     },
 
@@ -71,26 +71,26 @@ const OutlierTestEngine = {
      */
     generatePlates() {
         const { mode, seed } = this.state;
-        
+
         let plateCount;
         let deutanRatio;
-        
+
         switch (mode) {
             case 'baseline':
                 plateCount = this.config.baselinePlateCount;
-                deutanRatio = 0.625; // 10 deutan, 6 control
+                deutanRatio = 1.0; // All deutan
                 break;
             case 'tuning':
                 plateCount = this.config.tuningPlateCount;
-                deutanRatio = 0.875; // 7 deutan, 1 control (focus on problem area)
+                deutanRatio = 1.0; // All deutan
                 break;
             case 'validation':
                 plateCount = this.config.validationPlateCount;
-                deutanRatio = 0.667; // 8 deutan, 4 control
+                deutanRatio = 1.0; // All deutan
                 break;
             default:
                 plateCount = this.config.baselinePlateCount;
-                deutanRatio = 0.625;
+                deutanRatio = 1.0;
         }
 
         return this.mosaic.generateTestSequence({
@@ -225,7 +225,7 @@ const OutlierTestEngine = {
      */
     recordResponse(result) {
         const plate = this.getCurrentPlate();
-        
+
         const responseData = {
             plateIndex: this.state.currentPlateIndex,
             plateType: result.plateType,
@@ -247,12 +247,8 @@ const OutlierTestEngine = {
             this.callbacks.onPlateComplete(responseData, result);
         }
 
-        // Show feedback then proceed
-        this.mosaic.showFeedback(result, () => {
-            setTimeout(() => {
-                this.nextPlate();
-            }, this.config.plateTransitionDelay);
-        });
+        // Proceed immediately (no feedback delay) to match reference site
+        this.nextPlate();
     },
 
     /**
@@ -332,22 +328,22 @@ const OutlierTestEngine = {
             mode,
             seed,
             timestamp: new Date().toISOString(),
-            
+
             overall: {
                 ...overallStats,
                 percentage: overallStats.score
             },
-            
+
             deutan: {
                 ...deutanStats,
                 responses: deutanResponses
             },
-            
+
             control: {
                 ...controlStats,
                 responses: controlResponses
             },
-            
+
             timing: {
                 avgResponseTime: Math.round(avgResponseTime),
                 avgResponseTimeSeconds: (avgResponseTime / 1000).toFixed(2),
@@ -357,11 +353,11 @@ const OutlierTestEngine = {
                     time: r.responseTime
                 }))
             },
-            
+
             severity,
-            
+
             difficultyBreakdown,
-            
+
             summary: {
                 skipped: responses.filter(r => r.skipped).length,
                 timedOut: responses.filter(r => r.timeout).length,
@@ -373,34 +369,25 @@ const OutlierTestEngine = {
     },
 
     /**
-     * Calculate severity based on performance difference
+     * Calculate severity based on deutan performance ONLY
+     * (Control plates have been removed)
      */
     calculateSeverity(deutanStats, controlStats) {
-        // If control score is poor, test may be invalid
-        if (controlStats.score < 50) {
-            return {
-                value: 0,
-                bucket: 'inconclusive',
-                description: 'Control plate performance was too low for reliable assessment',
-                confidence: 'low'
-            };
-        }
+        // Direct scoring based on deutan plate accuracy
+        const score = deutanStats.score;
 
-        // Calculate the performance gap
-        const gap = controlStats.score - deutanStats.score;
-        
         // Determine severity bucket
         let bucket, value, description;
-        
-        if (gap <= 10 && deutanStats.score >= 70) {
+
+        if (score >= 90) {
             bucket = 'none';
             value = 0;
             description = 'No significant indicators of red-green color vision deficiency detected';
-        } else if (gap <= 25 || deutanStats.score >= 60) {
+        } else if (score >= 75) {
             bucket = 'mild';
             value = 25;
             description = 'Mild indicators of red-green color confusion detected';
-        } else if (gap <= 45 || deutanStats.score >= 40) {
+        } else if (score >= 50) {
             bucket = 'moderate';
             value = 55;
             description = 'Moderate indicators of red-green color vision deficiency detected';
@@ -410,11 +397,11 @@ const OutlierTestEngine = {
             description = 'Strong indicators of red-green color vision deficiency detected';
         }
 
-        // Confidence based on sample size and control performance
+        // Confidence is now primarily based on sample size
         let confidence = 'medium';
-        if (controlStats.total >= 5 && controlStats.score >= 80) {
+        if (deutanStats.total >= 10) {
             confidence = 'high';
-        } else if (controlStats.total < 3 || controlStats.score < 60) {
+        } else if (deutanStats.total < 5) {
             confidence = 'low';
         }
 
@@ -423,9 +410,9 @@ const OutlierTestEngine = {
             bucket,
             description,
             confidence,
-            performanceGap: gap,
+            performanceGap: 0, // No longer applicable
             deutanScore: deutanStats.score,
-            controlScore: controlStats.score
+            controlScore: 0 // No longer applicable
         };
     },
 

@@ -32,15 +32,17 @@ const App = {
      */
     init() {
         console.log('ColorVision Pro initializing...');
-        
+
         this.cacheElements();
         this.bindEvents();
         this.checkSystemCapabilities();
-        this.showScreen('landing');
-        
+
+        // Auto-start test immediately
+        this.startTest();
+
         // Listen for fullscreen changes
         document.addEventListener('fullscreenchange', () => this.onFullscreenChange());
-        
+
         console.log('ColorVision Pro ready');
     },
 
@@ -50,7 +52,7 @@ const App = {
     cacheElements() {
         // Screens
         this.elements.screens = {
-            landing: document.getElementById('screen-landing'),
+            // landing: document.getElementById('screen-landing'), // Removed
             calibration: document.getElementById('screen-calibration'),
             test: document.getElementById('screen-test'),
             results: document.getElementById('screen-results'),
@@ -59,9 +61,7 @@ const App = {
             about: document.getElementById('screen-about')
         };
 
-        // Landing
-        this.elements.consentCheckbox = document.getElementById('consent-checkbox');
-        this.elements.btnStart = document.getElementById('btn-start');
+        // Landing elements removed
 
         // Calibration
         this.elements.btnBackLanding = document.getElementById('btn-back-landing');
@@ -136,13 +136,7 @@ const App = {
      * Bind event listeners
      */
     bindEvents() {
-        // Landing
-        if (this.elements.consentCheckbox) {
-            this.elements.consentCheckbox.addEventListener('change', () => this.onConsentChange());
-        }
-        if (this.elements.btnStart) {
-            this.elements.btnStart.addEventListener('click', () => this.startCalibration());
-        }
+        // Landing events removed
 
         // Calibration
         if (this.elements.btnBackLanding) {
@@ -296,27 +290,14 @@ const App = {
         }
     },
 
-    // ========== Landing Screen ==========
-
-    onConsentChange() {
-        const checked = this.elements.consentCheckbox?.checked;
-        if (this.elements.btnStart) {
-            this.elements.btnStart.disabled = !checked;
-        }
-    },
-
-    startCalibration() {
-        if (!this.elements.consentCheckbox?.checked) return;
-        // Skip calibration screen, go directly to test
-        this.startTest();
-    },
+    // ========== Landing Screen Removed (methods deleted) ==========
 
     // ========== Calibration Screen ==========
 
     onCalibrationStep(e) {
         const step = e.target.dataset.step;
         const stepCard = document.getElementById(`step-${step}`);
-        
+
         if (stepCard) {
             this.state.calibrationComplete[step] = true;
             stepCard.classList.add('confirmed');
@@ -330,7 +311,7 @@ const App = {
     checkCalibrationComplete() {
         const { brightness, lighting, distance } = this.state.calibrationComplete;
         const allDone = brightness && lighting && distance && this.state.systemReady;
-        
+
         if (this.elements.btnStartTest) {
             this.elements.btnStartTest.disabled = !allDone;
         }
@@ -341,10 +322,10 @@ const App = {
     startTest() {
         // Create new session
         this.state.session = Storage.createSession();
-        
+
         // Initialize the animated mosaic
         AnimatedMosaic.init(this.elements.testCanvas);
-        
+
         // Initialize test engine
         OutlierTestEngine.init({
             mosaic: AnimatedMosaic,
@@ -362,7 +343,7 @@ const App = {
         this.showScreen('test');
         this.testStartTime = Date.now();
         this.updateTimer();
-        
+
         // Small delay to let screen transition complete and get proper container size
         setTimeout(() => {
             // Set canvas size AFTER screen is visible
@@ -370,7 +351,7 @@ const App = {
             const size = Math.min(container.clientWidth || 400, 500);
             this.elements.testCanvas.width = size;
             this.elements.testCanvas.height = size;
-            
+
             // Now start the test
             OutlierTestEngine.start();
         }, 300);
@@ -378,14 +359,8 @@ const App = {
 
     onPlateStart(plate, index) {
         // Update instruction text based on difficulty
-        const instructions = {
-            easy: 'Tap the square that looks different',
-            medium: 'Find the odd one out',
-            hard: 'Which square is different?'
-        };
-        
         if (this.elements.testInstruction) {
-            this.elements.testInstruction.textContent = instructions[plate.difficulty] || instructions.medium;
+            this.elements.testInstruction.textContent = 'Select the square that looks different';
         }
     },
 
@@ -402,7 +377,7 @@ const App = {
 
     updateProgress(current, total) {
         const progress = (current / total) * 100;
-        
+
         if (this.elements.progressFill) {
             this.elements.progressFill.style.width = `${progress}%`;
         }
@@ -413,16 +388,16 @@ const App = {
 
     updateTimer() {
         if (this.state.currentScreen !== 'test') return;
-        
+
         const elapsed = Math.floor((Date.now() - this.testStartTime) / 1000);
         const mins = Math.floor(elapsed / 60);
         const secs = elapsed % 60;
-        
+
         if (this.elements.testTimer) {
-            this.elements.testTimer.textContent = 
+            this.elements.testTimer.textContent =
                 `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
-        
+
         setTimeout(() => this.updateTimer(), 1000);
     },
 
@@ -445,13 +420,13 @@ const App = {
 
     onTestComplete(results) {
         this.state.baselineResults = results;
-        
+
         // Save to storage
         Storage.saveBaselineResults(results);
-        
+
         // Tune filter based on results
         this.state.filterParams = AdaptiveCameraFilter.tuneFromResults(results);
-        
+
         // Show results
         this.showResultsScreen(results);
     },
@@ -519,7 +494,7 @@ const App = {
 
     showCameraScreen() {
         this.showScreen('camera');
-        
+
         // Show filter preview
         if (this.elements.filterPreview && this.state.filterParams) {
             this.updateFilterPreview();
@@ -545,7 +520,7 @@ const App = {
     onIntensityChange(e) {
         const value = parseInt(e.target.value) / 100;
         AdaptiveCameraFilter.setIntensity(value);
-        
+
         if (this.elements.intensityValue) {
             this.elements.intensityValue.textContent = `${e.target.value}%`;
         }
@@ -601,7 +576,7 @@ const App = {
 
     updateFilterPreview() {
         if (!this.elements.filterPreview || !this.state.filterParams) return;
-        
+
         const params = this.state.filterParams;
         this.elements.filterPreview.innerHTML = `
             <div class="filter-param">
@@ -626,7 +601,7 @@ const App = {
         if (AdaptiveCameraFilter.isActive()) {
             AdaptiveCameraFilter.stop();
         }
-        
+
         this.showScreen('export');
         this.loadSessionsList();
     },
@@ -634,14 +609,14 @@ const App = {
     loadSessionsList() {
         const sessions = Storage.getSessions();
         const container = this.elements.sessionsList;
-        
+
         if (!container) return;
-        
+
         if (sessions.length === 0) {
             container.innerHTML = '<p class="no-sessions">No saved sessions yet.</p>';
             return;
         }
-        
+
         container.innerHTML = sessions.map(session => `
             <div class="session-item" data-id="${session.id}">
                 <div class="session-info">
@@ -652,7 +627,7 @@ const App = {
                 <button class="btn btn-small btn-secondary" data-action="export" data-id="${session.id}">Export</button>
             </div>
         `).join('');
-        
+
         // Bind export buttons
         container.querySelectorAll('[data-action="export"]').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -692,7 +667,7 @@ const App = {
             lighting: false,
             distance: false
         };
-        
+
         // Reset calibration UI
         this.elements.stepConfirms?.forEach(btn => {
             btn.textContent = btn.dataset.originalText || '✓ Confirm';
@@ -701,8 +676,8 @@ const App = {
             const stepCard = document.getElementById(`step-${step}`);
             if (stepCard) stepCard.classList.remove('confirmed');
         });
-        
-        this.showScreen('landing');
+
+        this.startTest();
     },
 
     // ========== Modal ==========
@@ -711,7 +686,7 @@ const App = {
         if (this.elements.modalTitle) this.elements.modalTitle.textContent = title;
         if (this.elements.modalMessage) this.elements.modalMessage.textContent = message;
         if (this.elements.modal) this.elements.modal.classList.add('active');
-        
+
         this.modalConfirmHandler = onConfirm;
         if (this.elements.modalConfirm) {
             this.elements.modalConfirm.onclick = () => {
