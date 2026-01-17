@@ -100,7 +100,7 @@ const App = {
         this.elements.cameraCanvas = document.getElementById('camera-canvas');
         this.elements.cameraPlaceholder = document.getElementById('camera-placeholder');
         this.elements.cameraError = document.getElementById('camera-error');
-        this.elements.cameraView = document.querySelector('.camera-view');
+        this.elements.cameraView = document.querySelector('.camera-wrapper');
         this.elements.btnEnableCamera = document.getElementById('btn-enable-camera');
         this.elements.btnRetryCamera = document.getElementById('btn-retry-camera');
         this.elements.filterToggle = document.getElementById('filter-toggle');
@@ -109,6 +109,7 @@ const App = {
         this.elements.btnSnapshot = document.getElementById('btn-snapshot');
         this.elements.btnSwitchCamera = document.getElementById('btn-switch-camera');
         this.elements.btnFullscreen = document.getElementById('btn-fullscreen');
+        this.elements.btnExitFullscreen = document.getElementById('btn-exit-fullscreen');
         this.elements.btnBackResults = document.getElementById('btn-back-results');
         this.elements.btnGoExport = document.getElementById('btn-go-export');
         this.elements.filterPreview = document.getElementById('filter-preview');
@@ -187,6 +188,9 @@ const App = {
         }
         if (this.elements.btnFullscreen) {
             this.elements.btnFullscreen.addEventListener('click', () => this.toggleFullscreen());
+        }
+        if (this.elements.btnExitFullscreen) {
+            this.elements.btnExitFullscreen.addEventListener('click', () => this.toggleFullscreen());
         }
         if (this.elements.btnBackResults) {
             this.elements.btnBackResults.addEventListener('click', () => this.showScreen('results'));

@@ -518,6 +518,18 @@
             z-index: 9999;
         }
 
+        .btn-exit-fullscreen {
+            display: none;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            z-index: 10000;
+        }
+
+        .camera-wrapper.fullscreen .btn-exit-fullscreen {
+            display: inline-flex;
+        }
+
         #camera-video,
         #camera-canvas {
             width: 100%;
@@ -831,6 +843,8 @@
                 <div class="camera-wrapper">
                     <video id="camera-video" autoplay playsinline></video>
                     <canvas id="camera-canvas"></canvas>
+
+                    <button class="btn btn-secondary btn-exit-fullscreen" id="btn-exit-fullscreen">✕ Exit Fullscreen</button>
 
                     <div class="camera-placeholder" id="camera-placeholder">
                         <div style="font-size: 3rem; margin-bottom: 1rem;">📷</div>
