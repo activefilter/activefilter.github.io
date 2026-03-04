@@ -305,7 +305,7 @@ const ActiveFilterTestController = (function() {
             }
         };
         
-        downloadFile(
+        Utils.downloadFile(
             JSON.stringify(exportData, null, 2),
             `activefilter-results-${formatDate(new Date())}.json`,
             'application/json'
@@ -334,27 +334,15 @@ const ActiveFilterTestController = (function() {
         
         const csvContent = headers.join(',') + '\n' + row.join(',');
         
-        downloadFile(
+        Utils.downloadFile(
             csvContent,
             `activefilter-results-${formatDate(new Date())}.csv`,
             'text/csv'
         );
     }
 
-    function downloadFile(content, filename, mimeType) {
-        const blob = new Blob([content], { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }
-
     // ============================================
-    // Utility Functions (delegated to shared Utils)
+    // Utility Functions
     // ============================================
     function showElement(el) {
         if (el) el.style.display = '';
@@ -373,16 +361,6 @@ const ActiveFilterTestController = (function() {
 
     function formatDate(date) {
         return date.toISOString().split('T')[0];
-    }
-
-    /**
-     * Trigger a file download using the shared utility.
-     * @param {string} content - The file content.
-     * @param {string} filename - The suggested download filename.
-     * @param {string} mimeType - The MIME type of the content.
-     */
-    function downloadFile(content, filename, mimeType) {
-        Utils.downloadFile(content, filename, mimeType);
     }
 
     // ============================================
