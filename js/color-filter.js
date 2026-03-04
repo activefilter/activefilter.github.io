@@ -69,11 +69,17 @@ const ColorFilter = {
     },
 
     /**
-     * Apply filter to a single RGB color
+     * Apply the color correction filter to a single RGB pixel.
+     * @param {number[]} rgb - The [r, g, b] input color (0–255 each).
+     * @param {Object} params - Filter parameters (hueShift, intensity, saturationBoost, brightness, contrast).
+     * @returns {number[]} The corrected [r, g, b] color.
      */
     applyToRGB(rgb, params) {
         if (!params || params.intensity === 0) {
             return rgb;
+        }
+        if (!Array.isArray(rgb) || rgb.length < 3) {
+            return [0, 0, 0];
         }
 
         let [r, g, b] = rgb;
@@ -144,9 +150,15 @@ const ColorFilter = {
     },
 
     /**
-     * Apply filter to image data (for canvas operations)
+     * Apply the color correction filter to an entire ImageData buffer.
+     * @param {ImageData} imageData - The canvas ImageData to process in-place.
+     * @param {Object} params - Filter parameters.
+     * @returns {ImageData} The modified ImageData.
      */
     applyToImageData(imageData, params) {
+        if (!imageData || !imageData.data) {
+            return imageData;
+        }
         const data = imageData.data;
         
         for (let i = 0; i < data.length; i += 4) {

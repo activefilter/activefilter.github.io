@@ -54,14 +54,16 @@ const Export = {
     },
 
     /**
-     * Prepare export data structure
+     * Prepare a structured export object from a session.
+     * @param {Object} session - The session data to export.
+     * @returns {Object} Structured export data.
      */
     prepareExportData(session) {
         return {
             exportInfo: {
                 exportedAt: new Date().toISOString(),
-                version: '1.0',
-                format: 'ColorVision Pro Session Export'
+                version: Constants.export.version,
+                format: Constants.export.formatName
             },
             session: {
                 id: session.id,
@@ -223,20 +225,13 @@ const Export = {
     },
 
     /**
-     * Download file
+     * Download a file via the shared utility helper.
+     * @param {string} content - The file content.
+     * @param {string} filename - The suggested download filename.
+     * @param {string} mimeType - The MIME type of the content.
      */
     downloadFile(content, filename, mimeType) {
-        const blob = new Blob([content], { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        URL.revokeObjectURL(url);
+        Utils.downloadFile(content, filename, mimeType);
     },
 
     /**
@@ -253,8 +248,8 @@ const Export = {
         const exportData = {
             exportInfo: {
                 exportedAt: new Date().toISOString(),
-                version: '1.0',
-                format: 'ColorVision Pro All Sessions Export'
+                version: Constants.export.version,
+                format: Constants.export.allSessionsFormatName
             },
             sessionCount: sessions.length,
             sessions: sessions.map(s => this.prepareExportData(s))

@@ -282,14 +282,14 @@ const ActiveFilterController = (function() {
     }
 
     // ============================================
-    // Utility Functions
+    // Utility Functions (delegated to shared Utils)
     // ============================================
     function showElement(el) {
-        if (el) el.classList.remove('hidden');
+        Utils.showElement(el);
     }
 
     function hideElement(el) {
-        if (el) el.classList.add('hidden');
+        Utils.hideElement(el);
     }
 
     // ============================================

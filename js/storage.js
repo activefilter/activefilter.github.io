@@ -1,11 +1,12 @@
 /**
  * ColorVision Pro - Local Storage Manager
- * Handles persistent storage of sessions and settings
+ * Handles persistent storage of sessions and settings using browser localStorage.
  */
 
 const Storage = {
     /**
-     * Storage keys
+     * LocalStorage key names used by the application.
+     * @type {Object.<string, string>}
      */
     keys: {
         sessions: 'colorvision_sessions',
@@ -14,7 +15,8 @@ const Storage = {
     },
 
     /**
-     * Check if storage is available
+     * Check if localStorage is available and writable.
+     * @returns {boolean} True if localStorage can be used.
      */
     isAvailable() {
         try {
@@ -28,7 +30,8 @@ const Storage = {
     },
 
     /**
-     * Get all stored sessions
+     * Retrieve all stored sessions.
+     * @returns {Object[]} An array of session objects, newest first.
      */
     getSessions() {
         try {
@@ -41,7 +44,9 @@ const Storage = {
     },
 
     /**
-     * Save sessions to storage
+     * Persist an array of sessions to localStorage.
+     * @param {Object[]} sessions - The sessions to store.
+     * @returns {boolean} True on success, false on failure.
      */
     saveSessions(sessions) {
         try {
@@ -54,7 +59,8 @@ const Storage = {
     },
 
     /**
-     * Create a new session
+     * Create a new session object and store it as the current session.
+     * @returns {Object} The newly created session.
      */
     createSession() {
         const session = {
@@ -76,7 +82,8 @@ const Storage = {
     },
 
     /**
-     * Get current session
+     * Retrieve the current in-progress session.
+     * @returns {Object|null} The current session, or null if none exists.
      */
     getCurrentSession() {
         try {
@@ -89,7 +96,9 @@ const Storage = {
     },
 
     /**
-     * Set current session
+     * Store a session as the current in-progress session.
+     * @param {Object} session - The session object to store.
+     * @returns {boolean} True on success, false on failure.
      */
     setCurrentSession(session) {
         try {
@@ -103,7 +112,9 @@ const Storage = {
     },
 
     /**
-     * Update current session with baseline results
+     * Attach baseline test results to the current session.
+     * @param {Object} results - Baseline test results.
+     * @returns {Object|null} The updated session, or null if no current session exists.
      */
     saveBaselineResults(results) {
         const session = this.getCurrentSession();
@@ -115,7 +126,9 @@ const Storage = {
     },
 
     /**
-     * Update current session with tuning results
+     * Attach tuning results and best filter parameters to the current session.
+     * @param {Object} results - Tuning results including bestParams.
+     * @returns {Object|null} The updated session.
      */
     saveTuningResults(results) {
         const session = this.getCurrentSession();
@@ -128,7 +141,9 @@ const Storage = {
     },
 
     /**
-     * Update current session with validation results
+     * Attach validation results to the current session, mark it complete, and archive.
+     * @param {Object} results - Validation test results.
+     * @returns {Object|null} The updated session.
      */
     saveValidationResults(results) {
         const session = this.getCurrentSession();
@@ -144,7 +159,8 @@ const Storage = {
     },
 
     /**
-     * Archive current session to sessions list
+     * Archive the current session to the sessions list.
+     * Updates an existing entry or prepends a new one, keeping at most 50 sessions.
      */
     archiveCurrentSession() {
         const session = this.getCurrentSession();
@@ -166,7 +182,9 @@ const Storage = {
     },
 
     /**
-     * Get a session by ID
+     * Retrieve a session by its unique ID.
+     * @param {string} sessionId - The session ID to look up.
+     * @returns {Object|null} The matching session, or null if not found.
      */
     getSession(sessionId) {
         const sessions = this.getSessions();
@@ -174,7 +192,9 @@ const Storage = {
     },
 
     /**
-     * Delete a session
+     * Delete a session from the stored sessions list.
+     * Also clears the current session if it matches.
+     * @param {string} sessionId - The session ID to remove.
      */
     deleteSession(sessionId) {
         const sessions = this.getSessions();
@@ -189,7 +209,8 @@ const Storage = {
     },
 
     /**
-     * Get settings
+     * Retrieve application settings from localStorage.
+     * @returns {Object} The stored settings, or defaults if none are saved.
      */
     getSettings() {
         try {
@@ -201,7 +222,9 @@ const Storage = {
     },
 
     /**
-     * Save settings
+     * Persist application settings to localStorage.
+     * @param {Object} settings - The settings to save.
+     * @returns {boolean} True on success, false on failure.
      */
     saveSettings(settings) {
         try {
@@ -214,7 +237,8 @@ const Storage = {
     },
 
     /**
-     * Get default settings
+     * Return the default settings object.
+     * @returns {Object} Default settings.
      */
     getDefaultSettings() {
         return {
@@ -225,7 +249,8 @@ const Storage = {
     },
 
     /**
-     * Clear all data
+     * Remove all application data from localStorage.
+     * @returns {boolean} True on success, false on failure.
      */
     clearAll() {
         try {
@@ -240,7 +265,8 @@ const Storage = {
     },
 
     /**
-     * Get storage usage info
+     * Return an overview of current storage usage.
+     * @returns {Object} An object with session count, current session flag, and estimated byte size.
      */
     getStorageInfo() {
         const sessions = this.getSessions();
@@ -264,7 +290,9 @@ const Storage = {
     },
 
     /**
-     * Format bytes for display
+     * Format a byte count into a human-readable string.
+     * @param {number} bytes - The number of bytes.
+     * @returns {string} Formatted string (e.g. "1.5 KB").
      */
     formatBytes(bytes) {
         if (bytes === 0) return '0 Bytes';

@@ -354,7 +354,7 @@ const ActiveFilterTestController = (function() {
     }
 
     // ============================================
-    // Utility Functions
+    // Utility Functions (delegated to shared Utils)
     // ============================================
     function showElement(el) {
         if (el) el.style.display = '';
@@ -373,6 +373,16 @@ const ActiveFilterTestController = (function() {
 
     function formatDate(date) {
         return date.toISOString().split('T')[0];
+    }
+
+    /**
+     * Trigger a file download using the shared utility.
+     * @param {string} content - The file content.
+     * @param {string} filename - The suggested download filename.
+     * @param {string} mimeType - The MIME type of the content.
+     */
+    function downloadFile(content, filename, mimeType) {
+        Utils.downloadFile(content, filename, mimeType);
     }
 
     // ============================================
