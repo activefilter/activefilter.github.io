@@ -305,7 +305,7 @@ const ActiveFilterTestController = (function() {
             }
         };
         
-        downloadFile(
+        Utils.downloadFile(
             JSON.stringify(exportData, null, 2),
             `activefilter-results-${formatDate(new Date())}.json`,
             'application/json'
@@ -334,23 +334,11 @@ const ActiveFilterTestController = (function() {
         
         const csvContent = headers.join(',') + '\n' + row.join(',');
         
-        downloadFile(
+        Utils.downloadFile(
             csvContent,
             `activefilter-results-${formatDate(new Date())}.csv`,
             'text/csv'
         );
-    }
-
-    function downloadFile(content, filename, mimeType) {
-        const blob = new Blob([content], { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
     }
 
     // ============================================

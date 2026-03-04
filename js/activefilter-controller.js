@@ -79,9 +79,9 @@ const ActiveFilterController = (function() {
         };
         
         // Update UI
-        showElement(elements.testContainer);
-        hideElement(elements.startScreen);
-        hideElement(elements.resultsContainer);
+        Utils.showElement(elements.testContainer);
+        Utils.hideElement(elements.startScreen);
+        Utils.hideElement(elements.resultsContainer);
         
         if (elements.btnCantTell) {
             elements.btnCantTell.disabled = false;
@@ -101,7 +101,7 @@ const ActiveFilterController = (function() {
             results: null
         };
         
-        hideElement(elements.resultsContainer);
+        Utils.hideElement(elements.resultsContainer);
         
         if (elements.btnCantTell) {
             elements.btnCantTell.disabled = false;
@@ -174,7 +174,7 @@ const ActiveFilterController = (function() {
     // Results Display
     // ============================================
     function showResults(results) {
-        showElement(elements.resultsContainer);
+        Utils.showElement(elements.resultsContainer);
         
         // Score
         if (elements.resultScore) {
@@ -279,17 +279,6 @@ const ActiveFilterController = (function() {
 
     function clearSessions() {
         localStorage.removeItem(STORAGE_KEY);
-    }
-
-    // ============================================
-    // Utility Functions
-    // ============================================
-    function showElement(el) {
-        if (el) el.classList.remove('hidden');
-    }
-
-    function hideElement(el) {
-        if (el) el.classList.add('hidden');
     }
 
     // ============================================

@@ -5,7 +5,9 @@
 
 const Export = {
     /**
-     * Export session as JSON
+     * Export a session as a JSON file download.
+     * @param {Object} [session] - The session to export. If omitted, uses the current session.
+     * @returns {string|null} The JSON string, or null if no session is available.
      */
     exportJSON(session) {
         if (!session) {
@@ -30,7 +32,9 @@ const Export = {
     },
 
     /**
-     * Export session as CSV
+     * Export a session as a CSV file download.
+     * @param {Object} [session] - The session to export. If omitted, uses the current session.
+     * @returns {string|null} The CSV string, or null if no session is available.
      */
     exportCSV(session) {
         if (!session) {
@@ -54,14 +58,16 @@ const Export = {
     },
 
     /**
-     * Prepare export data structure
+     * Prepare a structured export object from a session.
+     * @param {Object} session - The session data to export.
+     * @returns {Object} Structured export data.
      */
     prepareExportData(session) {
         return {
             exportInfo: {
                 exportedAt: new Date().toISOString(),
-                version: '1.0',
-                format: 'ColorVision Pro Session Export'
+                version: Constants.export.version,
+                format: Constants.export.formatName
             },
             session: {
                 id: session.id,
@@ -101,7 +107,9 @@ const Export = {
     },
 
     /**
-     * Generate CSV from session
+     * Generate a CSV string from session data.
+     * @param {Object} session - The session to convert.
+     * @returns {string} The CSV content.
      */
     generateCSV(session) {
         const lines = [];
@@ -209,7 +217,9 @@ const Export = {
     },
 
     /**
-     * Escape value for CSV
+     * Escape a value for safe inclusion in a CSV cell.
+     * @param {*} value - The value to escape.
+     * @returns {string} The escaped string.
      */
     escapeCSV(value) {
         if (value === null || value === undefined) {
@@ -223,24 +233,18 @@ const Export = {
     },
 
     /**
-     * Download file
+     * Download a file via the shared utility helper.
+     * @param {string} content - The file content.
+     * @param {string} filename - The suggested download filename.
+     * @param {string} mimeType - The MIME type of the content.
      */
     downloadFile(content, filename, mimeType) {
-        const blob = new Blob([content], { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        URL.revokeObjectURL(url);
+        Utils.downloadFile(content, filename, mimeType);
     },
 
     /**
-     * Export all sessions as JSON
+     * Export all stored sessions as a single JSON file download.
+     * @returns {string|null} The JSON string, or null if no sessions exist.
      */
     exportAllSessions() {
         const sessions = Storage.getSessions();
@@ -253,8 +257,8 @@ const Export = {
         const exportData = {
             exportInfo: {
                 exportedAt: new Date().toISOString(),
-                version: '1.0',
-                format: 'ColorVision Pro All Sessions Export'
+                version: Constants.export.version,
+                format: Constants.export.allSessionsFormatName
             },
             sessionCount: sessions.length,
             sessions: sessions.map(s => this.prepareExportData(s))
@@ -272,7 +276,9 @@ const Export = {
     },
 
     /**
-     * Generate shareable summary text
+     * Generate a human-readable text summary of a session's results.
+     * @param {Object} [session] - The session to summarize. If omitted, uses the current session.
+     * @returns {string} A formatted text summary.
      */
     generateSummary(session) {
         if (!session) {
