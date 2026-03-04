@@ -1,11 +1,12 @@
 /**
  * ColorVision Pro - Test Engine
- * Manages test flow, timing, and result calculation
+ * Manages test flow, timing, plate sequencing, and result calculation.
  */
 
 const TestEngine = {
     /**
-     * Test state
+     * Current test state, reset on each init().
+     * @type {Object}
      */
     state: {
         isRunning: false,
@@ -19,7 +20,8 @@ const TestEngine = {
     },
 
     /**
-     * Test configuration
+     * Static configuration values for test modes.
+     * @type {Object}
      */
     config: {
         baselinePlateCount: 12,
@@ -30,7 +32,8 @@ const TestEngine = {
     },
 
     /**
-     * Callbacks
+     * Event callback hooks set by the caller.
+     * @type {Object.<string, Function|null>}
      */
     callbacks: {
         onPlateReady: null,
@@ -40,7 +43,13 @@ const TestEngine = {
     },
 
     /**
-     * Initialize a new test
+     * Initialize a new test with the given options.
+     * @param {Object} [options={}] - Configuration options.
+     * @param {string} [options.mode='baseline'] - Test mode: 'baseline', 'tuning', or 'validation'.
+     * @param {number|null} [options.plateCount=null] - Override the number of plates.
+     * @param {Object|null} [options.filterParams=null] - Filter parameters for tuning/validation modes.
+     * @param {Object} [options.callbacks={}] - Event callback hooks.
+     * @returns {TestEngine} This instance for chaining.
      */
     init(options = {}) {
         const {
@@ -100,7 +109,7 @@ const TestEngine = {
     },
 
     /**
-     * Start the test
+     * Start the test, showing the first plate and beginning the timer.
      */
     start() {
         if (this.state.isRunning) return;
@@ -115,7 +124,7 @@ const TestEngine = {
     },
 
     /**
-     * Show current plate
+     * Show the current plate to the user and trigger the onPlateReady callback.
      */
     showCurrentPlate() {
         const plate = this.getCurrentPlate();
@@ -132,14 +141,16 @@ const TestEngine = {
     },
 
     /**
-     * Get current plate
+     * Get the plate object at the current index.
+     * @returns {Object|null} The current plate, or null if past the end.
      */
     getCurrentPlate() {
         return this.state.plates[this.state.currentPlateIndex] || null;
     },
 
     /**
-     * Record response and move to next plate
+     * Record the user's response for the current plate and advance.
+     * @param {string} response - The user's answer (e.g. a number, letter, or 'none').
      */
     recordResponse(response) {
         const plate = this.getCurrentPlate();
@@ -177,14 +188,17 @@ const TestEngine = {
     },
 
     /**
-     * Skip current plate (can't see)
+     * Skip the current plate (user pressed "can't see").
      */
     skipPlate() {
         this.recordResponse('none');
     },
 
     /**
-     * Check if answer is correct
+     * Check whether a user's response matches the correct answer for a plate.
+     * @param {string} response - The user's response.
+     * @param {Object} plate - The plate object containing the target value.
+     * @returns {boolean} True if the response matches (case-insensitive, trimmed).
      */
     checkAnswer(response, plate) {
         if (response === 'none' || response === null || response === undefined) {
@@ -201,7 +215,8 @@ const TestEngine = {
     },
 
     /**
-     * Complete the test
+     * Finalize the test, stop the timer, calculate results, and trigger onTestComplete.
+     * @returns {Object} Comprehensive test results.
      */
     complete() {
         this.state.isRunning = false;
@@ -217,7 +232,8 @@ const TestEngine = {
     },
 
     /**
-     * Calculate test results
+     * Calculate comprehensive test results including scores, timing, and severity.
+     * @returns {Object} Test results with overall, deutan, control scores and severity.
      */
     calculateResults() {
         const { responses, mode, filterParams, startTime, plates } = this.state;
@@ -292,7 +308,11 @@ const TestEngine = {
     },
 
     /**
-     * Estimate severity of color vision deficiency
+     * Estimate the severity of color vision deficiency from test scores.
+     * Adjusts the deutan score relative to control performance for better accuracy.
+     * @param {number} deutanScore - Deutan plate accuracy (0–100).
+     * @param {number} controlScore - Control plate accuracy (0–100).
+     * @returns {Object} Severity assessment with bucket, value, and description.
      */
     estimateSeverity(deutanScore, controlScore) {
         // If control score is low, user may have other issues (attention, etc.)
@@ -333,7 +353,9 @@ const TestEngine = {
     },
 
     /**
-     * Get human-readable severity description
+     * Get a human-readable description for a severity bucket.
+     * @param {string} bucket - One of 'none', 'mild', 'moderate', 'strong'.
+     * @returns {string} A descriptive sentence about the severity level.
      */
     getSeverityDescription(bucket) {
         const descriptions = {
@@ -368,7 +390,7 @@ const TestEngine = {
     },
 
     /**
-     * Stop test early
+     * Abort the test prematurely and stop the timer.
      */
     abort() {
         this.state.isRunning = false;
@@ -376,7 +398,8 @@ const TestEngine = {
     },
 
     /**
-     * Get progress info
+     * Get the current progress through the test.
+     * @returns {Object} An object with current plate number, total plates, and percentage.
      */
     getProgress() {
         return {
@@ -387,7 +410,8 @@ const TestEngine = {
     },
 
     /**
-     * Check if test is running
+     * Check whether the test is currently running.
+     * @returns {boolean} True if the test is in progress.
      */
     isRunning() {
         return this.state.isRunning;

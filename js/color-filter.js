@@ -1,11 +1,12 @@
 /**
  * ColorVision Pro - Color Filter Engine
- * Handles color correction filter calculation and application
+ * Handles color correction filter calculation and application for deuteranomaly compensation.
  */
 
 const ColorFilter = {
     /**
-     * Default filter parameters
+     * Default filter parameters when no correction is applied.
+     * @type {Object}
      */
     defaults: {
         hueShift: 0,        // -180 to 180 degrees
@@ -16,7 +17,8 @@ const ColorFilter = {
     },
 
     /**
-     * Filter presets based on severity
+     * Severity-based filter presets.
+     * @type {Object.<string, Object>}
      */
     presets: {
         none: {
@@ -50,7 +52,8 @@ const ColorFilter = {
     },
 
     /**
-     * Parameter ranges for tuning
+     * Allowed parameter ranges for the tuning UI.
+     * @type {Object.<string, {min: number, max: number, step: number}>}
      */
     paramRanges: {
         hueShift: { min: -60, max: 60, step: 5 },
@@ -61,7 +64,9 @@ const ColorFilter = {
     },
 
     /**
-     * Get initial filter parameters based on severity
+     * Return initial filter parameters for a given severity level.
+     * @param {string} severity - One of 'none', 'mild', 'moderate', 'strong'.
+     * @returns {Object} A copy of the preset parameters.
      */
     getInitialParams(severity) {
         const preset = this.presets[severity] || this.presets.moderate;
@@ -118,7 +123,12 @@ const ColorFilter = {
     },
 
     /**
-     * Calculate selective hue shift (more effect on red-green confusion colors)
+     * Calculate selective hue shift for the red-green confusion axis.
+     * Colors in the red-green range receive more shift; others receive less.
+     * @param {number} hue - Current hue in degrees (0–360).
+     * @param {number} shift - Base hue shift amount.
+     * @param {number} intensity - Filter intensity (0–1).
+     * @returns {number} The effective hue shift to apply.
      */
     calculateSelectiveHueShift(hue, shift, intensity) {
         // Red-green confusion colors are in specific hue ranges
@@ -176,7 +186,9 @@ const ColorFilter = {
     },
 
     /**
-     * Create CSS filter string (approximate, for quick preview)
+     * Build a CSS filter property string approximating the color correction.
+     * @param {Object} params - Filter parameters.
+     * @returns {string} A CSS filter value (e.g. "hue-rotate(15deg) saturate(1.1)"), or "none".
      */
     toCSSFilter(params) {
         if (!params || params.intensity === 0) {
@@ -206,7 +218,10 @@ const ColorFilter = {
     },
 
     /**
-     * Generate neighboring parameter sets for tuning
+     * Generate neighboring parameter sets for hill-climbing tuning.
+     * @param {Object} params - The current parameter set.
+     * @param {number} [stepMultiplier=1] - Scale factor for the step size.
+     * @returns {Object[]} An array of nearby parameter sets.
      */
     generateNeighbors(params, stepMultiplier = 1) {
         const neighbors = [];
@@ -238,7 +253,11 @@ const ColorFilter = {
     },
 
     /**
-     * Interpolate between two parameter sets
+     * Linearly interpolate between two parameter sets.
+     * @param {Object} params1 - Start parameters.
+     * @param {Object} params2 - End parameters.
+     * @param {number} t - Interpolation factor (0–1).
+     * @returns {Object} Interpolated parameters.
      */
     interpolate(params1, params2, t) {
         const result = {};
@@ -249,7 +268,10 @@ const ColorFilter = {
     },
 
     /**
-     * Calculate similarity score between two parameter sets
+     * Calculate a similarity score (0–1) between two parameter sets.
+     * @param {Object} params1 - First parameter set.
+     * @param {Object} params2 - Second parameter set.
+     * @returns {number} Similarity score where 1 means identical.
      */
     similarity(params1, params2) {
         let totalDiff = 0;
@@ -265,7 +287,9 @@ const ColorFilter = {
     },
 
     /**
-     * Validate and normalize parameters
+     * Validate and clamp filter parameters to their allowed ranges.
+     * @param {Object} params - Raw parameters to normalize.
+     * @returns {Object} Normalized parameters with all values within range.
      */
     normalizeParams(params) {
         const normalized = { ...this.defaults };
@@ -285,7 +309,9 @@ const ColorFilter = {
     },
 
     /**
-     * Format parameters for display
+     * Format parameters into human-readable display strings.
+     * @param {Object} params - Filter parameters.
+     * @returns {Object.<string, string>} Formatted key-value pairs.
      */
     formatForDisplay(params) {
         return {
@@ -298,14 +324,18 @@ const ColorFilter = {
     },
 
     /**
-     * Serialize parameters for storage
+     * Serialize parameters to a JSON string.
+     * @param {Object} params - Filter parameters.
+     * @returns {string} JSON representation.
      */
     serialize(params) {
         return JSON.stringify(this.normalizeParams(params));
     },
 
     /**
-     * Deserialize parameters from storage
+     * Deserialize parameters from a JSON string.
+     * @param {string} str - JSON string to parse.
+     * @returns {Object} Normalized filter parameters, or defaults on parse error.
      */
     deserialize(str) {
         try {
